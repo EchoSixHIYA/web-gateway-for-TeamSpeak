@@ -157,7 +157,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerD
   align-items: start;
   align-content: start;
   gap: 3px;
-  width: 218px;
+  width: 280px;
   height: auto;
   max-height: none;
   padding: 7px;
@@ -217,12 +217,12 @@ onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerD
 }
 
 .language-option strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .language-option small {
   color: #91a19c;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -282,7 +282,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerD
   }
 
   .language-dropdown {
-    width: 200px;
+    width: 250px;
   }
 }
 </style>
