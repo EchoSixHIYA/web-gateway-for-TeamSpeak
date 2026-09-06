@@ -2012,6 +2012,7 @@ function stopWhisperTalk(): void {
 @keyframes join-fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes join-title-in { from { opacity: 0; letter-spacing: -.02em; transform: translateY(18px) scale(.98); } to { opacity: 1; letter-spacing: -.075em; transform: translateY(0) scale(1); } }
 @keyframes join-accent-breathe { 0%, 100% { transform: translateY(0); text-shadow: 0 0 0 rgba(0, 106, 100, 0); } 50% { transform: translateY(-2px); text-shadow: 0 5px 18px rgba(0, 106, 100, .16); } }
+@keyframes join-accent-breathe-dark { 0%, 100% { transform: translateY(0); text-shadow: 0 0 8px rgba(125, 255, 174, .28), 0 0 18px rgba(105, 210, 199, .14); } 50% { transform: translateY(-2px); text-shadow: 0 0 13px rgba(125, 255, 174, .5), 0 0 26px rgba(105, 210, 199, .22); } }
 @keyframes join-dot-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(144, 246, 145, .28); } 50% { transform: scale(1.18); box-shadow: 0 0 0 6px rgba(144, 246, 145, 0); } }
 
 .join-page .join-header { animation: join-fade-up .55s cubic-bezier(.22, 1, .36, 1) both; }
@@ -2310,6 +2311,33 @@ function stopWhisperTalk(): void {
 :global(html[data-theme="dark"] .join-page .qq-join-link:hover) { color: var(--surface-1); background: var(--accent); border-color: var(--accent); }
 :global(html[data-theme="dark"] .join-page .field-wrap input::placeholder) { color: var(--text-muted); }
 :global(html[data-theme="dark"] .join-page .join-footer) { border-top-color: var(--border); }
+
+/* Restore the high-contrast dark welcome treatment. The artwork was removed,
+   so the copy needs its own restrained glow instead of falling back to the
+   light-theme charcoal colors on the dark surface. */
+:global(html[data-theme="dark"] .join-page .join-copy h1) {
+  color: #f3fffb;
+  text-shadow: 0 1px 0 #07100f, 0 0 9px rgba(243, 255, 251, .16);
+}
+:global(html[data-theme="dark"] .join-page .join-copy h1 em) {
+  color: #7dffae;
+  text-shadow: 0 0 10px rgba(125, 255, 174, .38), 0 0 22px rgba(105, 210, 199, .18);
+  animation-name: join-accent-breathe-dark;
+}
+:global(html[data-theme="dark"] .join-page .join-description) {
+  color: #c4d9d3;
+  text-shadow: 0 0 8px rgba(196, 217, 211, .12);
+}
+:global(html[data-theme="dark"] .join-page .promise-item b) {
+  color: #f0fff9;
+  text-shadow: 0 0 7px rgba(240, 255, 249, .14);
+}
+:global(html[data-theme="dark"] .join-page .promise-item small) {
+  color: #a9c6be;
+}
+:global(html[data-theme="dark"] .join-page .promise-icon) {
+  box-shadow: 0 0 12px rgba(105, 210, 199, .14);
+}
 
 /* M007 whisper target controls and M008 mobile navigation. */
 .whisper-strip { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 12px 14px; color: #52645e; border: 1px solid #d6ebe5; border-radius: 10px; background: #eef8f5; }
