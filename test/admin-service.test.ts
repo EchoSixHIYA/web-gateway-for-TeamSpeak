@@ -122,7 +122,7 @@ test("managed invites are opaque, bounded, revocable, and included in database b
   assert.ok(backup.length > 100);
   database.close();
   const reopened = new WebSpeakDatabase(path.join(directory, "webspeak.db"));
-  assert.equal(reopened.schemaVersion, 3);
+  assert.equal(reopened.schemaVersion, 4);
   assert.equal(reopened.listManagedInvites().length, 3);
   reopened.close();
 });

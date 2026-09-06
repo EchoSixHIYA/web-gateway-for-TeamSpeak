@@ -247,6 +247,11 @@ export class TSClient extends EventEmitter {
     return this.adapter?.protocol ?? null;
   }
 
+  async execCommandWithResponse(command: string, timeoutMs = 3000): Promise<Record<string, string>[]> {
+    if (!this.client || !this.connected) throw new Error("TeamSpeak session is not ready");
+    return this.client.execCommandWithResponse(command, timeoutMs);
+  }
+
   getIdentityString(): string {
     return this.identity.toString();
   }

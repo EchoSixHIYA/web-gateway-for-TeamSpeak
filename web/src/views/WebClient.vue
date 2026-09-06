@@ -17,7 +17,7 @@
         <div class="join-copy">
           <div class="eyebrow"><span class="eyebrow-dot"></span> {{ t('privateAudio') }}</div>
           <h1>{{ t('joinLine1') }}<br /><em>{{ t('joinLine2') }}</em></h1>
-          <p class="join-description">{{ welcomeText || t('joinDescription') }}</p>
+          <p class="join-description">{{ localizedWelcomeText }}</p>
           <div class="promise-list">
             <div class="promise-item"><span class="promise-icon"><Icon name="waveform" :size="16" /></span><span><b>{{ t('highQuality') }}</b><small>{{ t('opusAudio') }}</small></span></div>
             <div class="promise-item"><span class="promise-icon mint"><Icon name="shield" :size="16" /></span><span><b>{{ t('secureJoin') }}</b><small>{{ t('inviteProtected') }}</small></span></div>
@@ -348,7 +348,8 @@ const favoriteServers = ref<FavoriteServer[]>([]);
 const recentServers = ref<RecentServer[]>([]);
 const initialized = ref(false);
 const siteName = ref("WebSpeak");
-const welcomeText = ref("");
+const welcomeTextZh = ref("");
+const welcomeTextEn = ref("");
 const appVersion = ref("0.1.2");
 const browserError = ref("");
 const serverConfigLoading = ref(true);
@@ -378,6 +379,7 @@ const language = ref<Language>(getInitialLanguage());
 const themeMode = ref<ThemeMode>(getStoredTheme());
 const themeIcon = computed(() => isDarkTheme(themeMode.value) ? "sun" : "moon");
 const themeLabel = computed(() => isDarkTheme(themeMode.value) ? t("switchToLightTheme") : t("switchToDarkTheme"));
+const localizedWelcomeText = computed(() => (language.value === "en" ? welcomeTextEn.value : welcomeTextZh.value) || t("joinDescription"));
 applyTheme(themeMode.value);
 const translations: Record<Language, Record<string, string>> = {
   zh: {
@@ -1224,11 +1226,12 @@ async function loadPublicConfig() {
   try {
     const response = await fetch("/api/public-config", { headers: { accept: "application/json" } });
     if (!response.ok) return;
-    const config = await response.json() as { version?: unknown; initialized?: unknown; siteName?: unknown; welcomeText?: unknown; accessMode?: unknown; target?: unknown };
+    const config = await response.json() as { version?: unknown; initialized?: unknown; siteName?: unknown; welcomeText?: unknown; welcomeTextEn?: unknown; accessMode?: unknown; target?: unknown };
     if (typeof config.version === "string" && config.version.trim()) appVersion.value = config.version.trim();
     initialized.value = config.initialized === true;
     if (typeof config.siteName === "string" && config.siteName.trim()) siteName.value = config.siteName.trim();
-    if (typeof config.welcomeText === "string") welcomeText.value = config.welcomeText;
+    if (typeof config.welcomeText === "string") welcomeTextZh.value = config.welcomeText;
+    if (typeof config.welcomeTextEn === "string") welcomeTextEn.value = config.welcomeTextEn;
     accessMode.value = config.accessMode === "open" ? "open" : "fixed";
     const hasInviteTarget = query.has("server") || query.has("target") || query.has("tsHost") || query.has("tsPort");
     if (!hasInviteTarget && typeof config.target === "string" && config.target.trim()) {

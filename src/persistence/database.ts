@@ -6,12 +6,13 @@ import type { AdminCredential } from "../security/admin-password.js";
 import type { TeamSpeakProtocol } from "../server/teamspeak-adapter.js";
 import { DEFAULT_WEBRTC_UDP_PORT_RANGE } from "../server/webrtc-config.js";
 
-export const DATABASE_SCHEMA_VERSION = 3;
+export const DATABASE_SCHEMA_VERSION = 4;
 export type AccessMode = "fixed" | "open";
 
 export interface PersistedSettings {
   siteName: string;
   welcomeText: string;
+  welcomeTextEn: string;
   accessMode: AccessMode;
   tsHost: string;
   tsPort: number;
@@ -29,6 +30,7 @@ export interface PersistedSettings {
 export interface SettingsUpdate {
   siteName: string;
   welcomeText: string;
+  welcomeTextEn?: string;
   accessMode: AccessMode;
   tsHost: string;
   tsPort: number;
@@ -69,6 +71,7 @@ interface ManagedInviteRow extends Record<string, unknown> {
 interface SettingsRow extends Record<string, unknown> {
   site_name: string;
   welcome_text: string;
+  welcome_text_en: string;
   access_mode: string;
   ts_host: string;
   ts_port: number;
@@ -143,6 +146,7 @@ export class WebSpeakDatabase {
     return {
       siteName: row.site_name,
       welcomeText: row.welcome_text,
+      welcomeTextEn: row.welcome_text_en,
       accessMode: row.access_mode === "open" ? "open" : "fixed",
       tsHost: row.ts_host,
       tsPort: row.ts_port,
@@ -377,19 +381,29 @@ export class WebSpeakDatabase {
         `);
         this.database.exec("PRAGMA user_version = 3");
       });
+      version = 3;
+    }
+    if (version === 3) {
+      this.transaction(() => {
+        this.database.exec(`
+          ALTER TABLE settings ADD COLUMN welcome_text_en TEXT NOT NULL DEFAULT '';
+        `);
+        this.database.exec("PRAGMA user_version = 4");
+      });
     }
   }
 
   private writeSettings(settings: SettingsUpdate, now: string): void {
     this.database.prepare(
       `UPDATE settings SET
-         site_name = ?, welcome_text = ?, access_mode = ?, ts_host = ?, ts_port = ?,
+         site_name = ?, welcome_text = ?, welcome_text_en = ?, access_mode = ?, ts_host = ?, ts_port = ?,
          ts_password_encrypted = ?, webrtc_enabled = ?, webrtc_udp_start = ?,
          webrtc_udp_end = ?, updated_at = ?
        WHERE id = 1`,
     ).run(
       settings.siteName,
       settings.welcomeText,
+      settings.welcomeTextEn ?? "",
       settings.accessMode,
       settings.tsHost,
       settings.tsPort,

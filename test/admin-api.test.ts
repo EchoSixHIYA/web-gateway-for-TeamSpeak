@@ -161,7 +161,7 @@ test("admin API requires the default password to be changed before administratio
   const sessions = await request(origin, "/api/admin/sessions", { cookie });
   assert.deepEqual(sessions.body.sessions, []);
   const diagnostics = await request(origin, "/api/admin/diagnostics", { cookie });
-  assert.equal(diagnostics.body.database.schemaVersion, 3);
+  assert.equal(diagnostics.body.database.schemaVersion, 4);
   assert.equal("target" in diagnostics.body.teamSpeak, true);
   assert.equal("protocol" in diagnostics.body.teamSpeak, false);
 

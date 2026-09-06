@@ -17,6 +17,7 @@ export interface AdminSettingsInput {
   accessMode: AccessMode;
   siteName: string;
   welcomeText: string;
+  welcomeTextEn?: string;
   webRtcEnabled: boolean;
   webRtcUdpStart?: number;
   webRtcUdpEnd?: number;
@@ -97,6 +98,7 @@ export class AdminService {
       initialized: this.isInitialized(),
       siteName: settings.siteName,
       welcomeText: settings.welcomeText,
+      welcomeTextEn: settings.welcomeTextEn,
       accessMode: settings.accessMode,
       target: formatTeamSpeakTarget({ host: settings.tsHost, port: settings.tsPort }),
     };
@@ -110,6 +112,7 @@ export class AdminService {
       accessMode: settings.accessMode,
       siteName: settings.siteName,
       welcomeText: settings.welcomeText,
+      welcomeTextEn: settings.welcomeTextEn,
       lastTestAt: settings.lastTestAt,
       lastTestLatencyMs: settings.lastTestLatencyMs,
       lastTestError: settings.lastTestError,
@@ -263,8 +266,10 @@ export class AdminService {
     }
     const siteName = input.siteName.trim();
     const welcomeText = input.welcomeText.trim();
+    const welcomeTextEn = typeof input.welcomeTextEn === "string" ? input.welcomeTextEn.trim() : current.welcomeTextEn;
     if (!siteName || siteName.length > 80) throw new AdminInputError("INVALID_SITE_NAME", "Site name must contain 1 to 80 characters");
     if (welcomeText.length > 500) throw new AdminInputError("INVALID_WELCOME_TEXT", "Welcome text cannot exceed 500 characters");
+    if (welcomeTextEn.length > 500) throw new AdminInputError("INVALID_WELCOME_TEXT_EN", "English welcome text cannot exceed 500 characters");
     if (input.accessMode !== "fixed" && input.accessMode !== "open") {
       throw new AdminInputError("INVALID_ACCESS_MODE", "Access mode is invalid");
     }
@@ -293,6 +298,7 @@ export class AdminService {
     return {
       siteName,
       welcomeText,
+      welcomeTextEn,
       accessMode: input.accessMode,
       tsHost: target.host,
       tsPort: target.port,
@@ -324,6 +330,7 @@ export class AdminService {
     return {
       siteName: settings.siteName,
       welcomeText: settings.welcomeText,
+      welcomeTextEn: settings.welcomeTextEn,
       accessMode: settings.accessMode,
       tsHost: settings.tsHost,
       tsPort: settings.tsPort,
@@ -342,6 +349,7 @@ export class AdminService {
       this.database.updateSettings({
         siteName: current.siteName,
         welcomeText: current.welcomeText,
+        welcomeTextEn: current.welcomeTextEn,
         accessMode: current.accessMode,
         tsHost: legacy.tsHost,
         tsPort: legacy.tsPort,

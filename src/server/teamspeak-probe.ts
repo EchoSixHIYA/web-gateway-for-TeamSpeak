@@ -1,7 +1,8 @@
 import type { Logger } from "../logger.js";
 import { normalizeTeamSpeakError, type WebSpeakErrorCode } from "../errors.js";
 import type { TeamSpeakTarget } from "../domain/teamspeak-target.js";
-import { TeamSpeakAdapter, type TeamSpeakProtocol } from "./teamspeak-adapter.js";
+import { TSClient } from "./ts-client.js";
+import type { TeamSpeakProtocol } from "./teamspeak-adapter.js";
 
 export type ProbeErrorCode =
   | "HOST_NOT_FOUND"
@@ -30,8 +31,10 @@ export class TeamSpeakProbeError extends Error {
 interface ProbeAdapter {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  readonly protocol: TeamSpeakProtocol | null;
-  readonly client: {
+  readonly protocol?: TeamSpeakProtocol | null;
+  getProtocol?(): TeamSpeakProtocol | null;
+  execCommandWithResponse?(command: string, timeoutMs?: number): Promise<Record<string, string>[]>;
+  readonly client?: {
     execCommandWithResponse(command: string, timeoutMs?: number): Promise<Record<string, string>[]>;
   };
 }
@@ -47,7 +50,15 @@ export async function probeTeamSpeak(
   password: string,
   logger: Logger,
   factory: ProbeAdapterFactory = ({ target: probeTarget, password: probePassword, logger: probeLogger }) =>
-    new TeamSpeakAdapter({ target: probeTarget, nickname: "WebSpeak Probe", serverPassword: probePassword }, probeLogger),
+    (() => {
+      const client = new TSClient({ target: probeTarget, nickname: "WebSpeak Probe", serverPassword: probePassword }, probeLogger);
+      return {
+        connect: () => client.connect(),
+        disconnect: () => client.disconnect(),
+        getProtocol: () => client.getProtocol(),
+        execCommandWithResponse: (command: string, timeoutMs?: number) => client.execCommandWithResponse(command, timeoutMs),
+      };
+    })(),
 ): Promise<TeamSpeakProbeResult> {
   const startedAt = Date.now();
   const adapter = factory({ target, password, logger: logger.child({ component: "teamspeak-probe" }) });
@@ -55,7 +66,9 @@ export async function probeTeamSpeak(
     await adapter.connect();
     let serverName: string | null = null;
     try {
-      const rows = await adapter.client.execCommandWithResponse("serverinfo", 3000);
+      const execute = adapter.execCommandWithResponse?.bind(adapter) ?? adapter.client?.execCommandWithResponse.bind(adapter.client);
+      if (!execute) throw new Error("Probe adapter does not support commands");
+      const rows = await execute("serverinfo", 3000);
       const first = rows[0] ?? {};
       serverName = first.virtualserver_name ?? first.server_name ?? first.name ?? null;
     } catch {
@@ -63,7 +76,7 @@ export async function probeTeamSpeak(
     }
     return {
       ok: true,
-      protocol: adapter.protocol,
+      protocol: adapter.protocol ?? adapter.getProtocol?.() ?? null,
       latencyMs: Math.max(0, Date.now() - startedAt),
       serverName,
       requiresPassword: Boolean(password),

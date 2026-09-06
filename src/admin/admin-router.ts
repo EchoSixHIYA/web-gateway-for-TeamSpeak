@@ -14,7 +14,7 @@ export interface AdminConnectionRecord {
   startedAt: string;
   connectedAt: string | null;
   disconnectedAt: string | null;
-  durationSeconds: number;
+  durationSeconds: number | null;
   status: "active" | "connecting" | "disconnected" | "failed";
   reason: string | null;
 }
@@ -349,6 +349,7 @@ function readSettingsInput(body: Record<string, unknown>): AdminSettingsInput {
     accessMode: body.accessMode === "open" ? "open" : body.accessMode === "fixed" ? "fixed" : body.accessMode as never,
     siteName: readString(body, "siteName", 80),
     welcomeText: readOptionalString(body, "welcomeText", 500),
+    welcomeTextEn: typeof body.welcomeTextEn === "string" ? body.welcomeTextEn.slice(0, 500) : undefined,
     webRtcEnabled: body.webRtcEnabled === true,
     webRtcUdpStart: readOptionalInteger(body, "webRtcUdpStart"),
     webRtcUdpEnd: readOptionalInteger(body, "webRtcUdpEnd"),
@@ -475,7 +476,7 @@ export function readConnectionHistory(logFile: string | undefined, limit: number
         ? Math.max(0, Math.floor(log.raw.durationSeconds))
         : current.connectedAt
           ? Math.max(0, Math.floor((Date.parse(log.timestamp) - Date.parse(current.connectedAt)) / 1000))
-          : 0;
+          : null;
       current.reason = typeof log.raw.reason === "string" ? log.raw.reason : null;
       current.status = current.connectedAt ? "disconnected" : "failed";
     }
@@ -494,7 +495,9 @@ export function readConnectionHistory(logFile: string | undefined, limit: number
         startedAt: record.startedAt,
         connectedAt: record.connectedAt,
         disconnectedAt: record.disconnectedAt,
-        durationSeconds: record.durationSeconds ?? Math.max(0, Math.floor((end - Date.parse(start)) / 1000)),
+        durationSeconds: record.durationSeconds ?? (record.status === "active" || record.status === "connecting"
+          ? Math.max(0, Math.floor((end - Date.parse(start)) / 1000))
+          : null),
         status: record.status,
         reason: record.reason,
       };
