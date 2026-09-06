@@ -114,10 +114,30 @@ WebSpeak 面向希望通过网页提供 TeamSpeak 语音服务的个人、社区
 
 ### 🖼️ 界面截图
 
-以下截图来自上海测试节点，展示中文界面下的实际语音工作区。
+以下截图来自上海测试节点，展示中文界面下的欢迎页、语音工作区、音量控制和成员操作菜单。
+
+#### 欢迎页
 
 <p align="center">
-  <img src="./docs/screenshots/webspeak-zh.png" alt="WebSpeak 中文界面" width="100%" />
+  <img src="./docs/screenshots/webspeak-zh-home.png" alt="WebSpeak 中文欢迎页" width="100%" />
+</p>
+
+#### 语音工作区
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-zh.png" alt="WebSpeak 中文语音工作区" width="100%" />
+</p>
+
+#### 音量控制
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-zh-audio.png" alt="WebSpeak 中文音量控制" width="100%" />
+</p>
+
+#### 成员右键菜单
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-zh-menu.png" alt="WebSpeak 中文成员右键菜单" width="100%" />
 </p>
 
 <a id="zh-features"></a>
@@ -262,10 +282,30 @@ WebSpeak is built for individuals, communities, and server operators who want to
 
 ### 🖼️ Screenshots
 
-These screenshots come from the Shanghai test node and show the live voice workspace in English.
+These screenshots come from the Shanghai test node and show the welcome page, voice workspace, audio controls, and member actions in English.
+
+#### Welcome page
 
 <p align="center">
-  <img src="./docs/screenshots/webspeak-en.png" alt="WebSpeak English interface" width="100%" />
+  <img src="./docs/screenshots/webspeak-en-home.png" alt="WebSpeak English welcome page" width="100%" />
+</p>
+
+#### Voice workspace
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-en.png" alt="WebSpeak English voice workspace" width="100%" />
+</p>
+
+#### Audio controls
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-en-audio.png" alt="WebSpeak English audio controls" width="100%" />
+</p>
+
+#### Member context menu
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-en-menu.png" alt="WebSpeak English member context menu" width="100%" />
 </p>
 
 <a id="en-features"></a>
@@ -410,10 +450,30 @@ WebSpeak ist ein selbst gehosteter TeamSpeak-3-/TeamSpeak-6-Webclient und ein Sp
 
 ### 🖼️ Screenshots
 
-Diese Screenshots stammen vom Shanghai-Testknoten und zeigen den Sprachbereich mit deutscher Benutzeroberfläche.
+Diese Screenshots stammen vom Shanghai-Testknoten und zeigen die Willkommensseite, den Sprachbereich, die Audiosteuerung und das Mitglieder-Menü auf Deutsch.
+
+#### Willkommensseite
 
 <p align="center">
-  <img src="./docs/screenshots/webspeak-de.png" alt="WebSpeak deutsche Oberfläche" width="100%" />
+  <img src="./docs/screenshots/webspeak-de-home.png" alt="WebSpeak deutsche Willkommensseite" width="100%" />
+</p>
+
+#### Sprachbereich
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-de.png" alt="WebSpeak deutscher Sprachbereich" width="100%" />
+</p>
+
+#### Audiosteuerung
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-de-audio.png" alt="WebSpeak deutsche Audiosteuerung" width="100%" />
+</p>
+
+#### Mitglieder-Menü
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-de-menu.png" alt="WebSpeak deutsches Mitglieder-Menü" width="100%" />
 </p>
 
 <a id="de-features"></a>
