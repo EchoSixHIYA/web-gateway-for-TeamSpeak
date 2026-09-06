@@ -1,5 +1,5 @@
 export interface ClientCommand {
-  type: "switchChannel" | "sendTextMessage" | "sendServerMessage" | "sendPrivateMessage" | "poke" | "setAway" | "setWhisperTargets" | "setWhisperActive" | "setMicrophoneMuted" | "setAccompanimentActive" | "setMemberVolume";
+  type: "switchChannel" | "sendTextMessage" | "sendServerMessage" | "sendPrivateMessage" | "poke" | "setAway" | "setWhisperTargets" | "setWhisperActive" | "setMicrophoneMuted" | "setAccompanimentActive" | "setMemberVolume" | "latencyProbe";
   requestId?: string;
   payload: Record<string, unknown>;
 }
@@ -19,7 +19,7 @@ export function parseClientCommand(raw: string): ClientCommandResult {
   if (value.requestId !== undefined && (typeof value.requestId !== "string" || value.requestId.length > 64)) {
     return { error: { code: "INVALID_REQUEST_ID", message: "请求标识无效" } };
   }
-  const supportedTypes = new Set(["switchChannel", "sendTextMessage", "sendServerMessage", "sendPrivateMessage", "poke", "setAway", "setWhisperTargets", "setWhisperActive", "setMicrophoneMuted", "setAccompanimentActive", "setMemberVolume"]);
+  const supportedTypes = new Set(["switchChannel", "sendTextMessage", "sendServerMessage", "sendPrivateMessage", "poke", "setAway", "setWhisperTargets", "setWhisperActive", "setMicrophoneMuted", "setAccompanimentActive", "setMemberVolume", "latencyProbe"]);
   if (!supportedTypes.has(value.type)) {
     return { error: { code: "UNKNOWN_MESSAGE_TYPE", message: "不支持的消息类型" } };
   }
@@ -64,6 +64,9 @@ export function parseClientCommand(raw: string): ClientCommandResult {
   }
   if (value.type === "setMemberVolume" && (typeof value.payload.clientId !== "number" || !Number.isInteger(value.payload.clientId) || value.payload.clientId <= 0 || value.payload.clientId > 65535 || typeof value.payload.volume !== "number" || !Number.isFinite(value.payload.volume) || value.payload.volume < 0 || value.payload.volume > 4)) {
     return { error: { code: "INVALID_MEMBER_VOLUME", message: "成员音量无效" } };
+  }
+  if (value.type === "latencyProbe" && (typeof value.payload.sequence !== "string" || value.payload.sequence.length > 64)) {
+    return { error: { code: "INVALID_LATENCY_PROBE", message: "延迟探测标识无效" } };
   }
   return {
     type: value.type as ClientCommand["type"],

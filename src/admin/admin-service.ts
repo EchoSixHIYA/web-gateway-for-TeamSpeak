@@ -6,7 +6,8 @@ import { formatTeamSpeakTarget, parseTeamSpeakTarget, type TeamSpeakTarget } fro
 import { type AccessMode, type ManagedInviteRecord, type SettingsUpdate, WebSpeakDatabase } from "../persistence/database.js";
 import { hashAdminPassword, validateAdminPassword, verifyAdminPassword } from "../security/admin-password.js";
 import { decryptSecret, encryptSecret } from "../security/secret-crypto.js";
-import { probeTeamSpeak, TeamSpeakProbeError, type TeamSpeakProbeResult } from "../server/teamspeak-probe.js";
+import { probeTeamSpeak, TeamSpeakProbeError } from "../server/teamspeak-probe.js";
+import { pingTeamSpeak } from "../server/network-probe.js";
 import type { WebRtcAudioOptions } from "../server/webrtc-audio.js";
 import { DEFAULT_WEBRTC_UDP_PORT_RANGE, WEBRTC_UDP_PORT_MAX, WEBRTC_UDP_PORT_MIN } from "../server/webrtc-config.js";
 
@@ -155,7 +156,7 @@ export class AdminService {
     };
   }
 
-  async testConnection(targetText: string, password: string, persistResult: boolean): Promise<Omit<TeamSpeakProbeResult, "protocol">> {
+  async testConnection(targetText: string, password: string, persistResult: boolean): Promise<{ ok: boolean; latencyMs: number; serverName: string | null; requiresPassword: boolean; packetLossPercent?: number; attempts?: number; successfulAttempts?: number; errorCode?: string }> {
     let target: TeamSpeakTarget;
     try {
       target = parseTeamSpeakTarget(targetText);
@@ -163,6 +164,32 @@ export class AdminService {
       throw new AdminInputError("INVALID_TARGET", "TeamSpeak target is invalid");
     }
     try {
+      // The admin connection test is a reachability check. A TCP endpoint
+      // probe avoids creating a temporary TeamSpeak client and lets the UI
+      // report packet loss. Keep the injected TeamSpeak probe for tests and
+      // compatibility with callers that explicitly need protocol discovery.
+      if (this.probe === probeTeamSpeak) {
+        const result = await pingTeamSpeak(target, { attempts: 4 });
+        const publicResult = {
+          ok: result.ok,
+          latencyMs: result.latencyMs ?? 0,
+          serverName: null,
+          requiresPassword: Boolean(password),
+          packetLossPercent: result.packetLossPercent,
+          attempts: result.attempts,
+          successfulAttempts: result.successfulAttempts,
+          ...(result.errorCode ? { errorCode: result.errorCode } : {}),
+        };
+        if (persistResult) {
+          this.database.recordConnectionTest({ protocol: null, latencyMs: result.latencyMs, error: result.ok ? null : (result.errorCode ?? "UNREACHABLE") });
+          this.database.addAudit(result.ok ? "CONNECTION_TEST_SUCCEEDED" : "CONNECTION_TEST_FAILED", {
+            latencyMs: result.latencyMs,
+            packetLossPercent: result.packetLossPercent,
+            ...(result.errorCode ? { code: result.errorCode } : {}),
+          });
+        }
+        return publicResult;
+      }
       const result = await this.probe(target, password, this.logger);
       if (persistResult) {
         this.database.recordConnectionTest({ protocol: result.protocol, latencyMs: result.latencyMs, error: null });

@@ -10,7 +10,7 @@
             <small>{{ t('browserWorkspace') }}</small>
           </div>
         </div>
-        <div class="header-tools"><div class="header-note"><span class="tiny-dot"></span> {{ t('secureGateway') }}</div><a class="github-button" href="https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak" target="_blank" rel="noreferrer" :title="t('githubRepository')" :aria-label="t('githubRepository')"><Icon name="github" :size="18" /><span>{{ t('githubRepository') }}</span></a><button type="button" class="qq-button" :title="t('qqGroup')" :aria-label="t('qqGroup')" aria-haspopup="dialog" @click="qqModalOpen = true"><Icon name="qq" :size="18" /><span class="qq-label">{{ t('qqGroup') }}</span></button><a class="bilibili-button" href="https://space.bilibili.com/25414873" target="_blank" rel="noreferrer" :title="t('bilibiliProfile')" :aria-label="t('bilibiliProfile')"><span class="bilibili-glyph">B</span><span class="bilibili-label">{{ t('bilibiliProfile') }}</span></a><span class="version-badge" :title="`${t('currentVersion')}: v${appVersion}`" :aria-label="`${t('currentVersion')}: v${appVersion}`">v{{ appVersion }}</span><a class="changelog-button" href="https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/blob/master/CHANGELOG.md" target="_blank" rel="noreferrer" :title="t('viewChangelog')" :aria-label="t('viewChangelog')"><Icon name="clock" :size="16" /><span>{{ t('viewChangelog') }}</span></a><a class="guide-button" href="/admin" :title="t('adminConsole')" :aria-label="t('adminConsole')"><Icon name="settings" :size="15" /><span>{{ t('adminConsole') }}</span></a><button type="button" class="header-action theme-toggle" :title="themeLabel" :aria-label="themeLabel" @click="cycleTheme"><Icon :name="themeIcon" :size="17" /></button><select v-model="language" class="language-select" :aria-label="t('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select></div>
+        <div class="header-tools"><div class="header-note"><span class="tiny-dot"></span> {{ t('secureGateway') }}</div><a class="github-button" href="https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak" target="_blank" rel="noreferrer" :title="t('githubRepository')" :aria-label="t('githubRepository')"><Icon name="github" :size="18" /><span>{{ t('githubRepository') }}</span></a><button type="button" class="qq-button" :title="t('qqGroup')" :aria-label="t('qqGroup')" aria-haspopup="dialog" @click="qqModalOpen = true"><Icon name="qq" :size="18" /><span class="qq-label">{{ t('qqGroup') }}</span></button><a class="bilibili-button" href="https://space.bilibili.com/25414873" target="_blank" rel="noreferrer" :title="t('bilibiliProfile')" :aria-label="t('bilibiliProfile')"><span class="bilibili-glyph">B</span><span class="bilibili-label">{{ t('bilibiliProfile') }}</span></a><span class="version-badge" :title="`${t('currentVersion')}: v${appVersion}`" :aria-label="`${t('currentVersion')}: v${appVersion}`">v{{ appVersion }}</span><a class="changelog-button" href="https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/blob/master/CHANGELOG.md" target="_blank" rel="noreferrer" :title="t('viewChangelog')" :aria-label="t('viewChangelog')"><Icon name="clock" :size="16" /><span>{{ t('viewChangelog') }}</span></a><a class="guide-button" href="/admin" :title="t('adminConsole')" :aria-label="t('adminConsole')"><Icon name="settings" :size="15" /><span>{{ t('adminConsole') }}</span></a><button type="button" class="header-action theme-toggle" :title="themeLabel" :aria-label="themeLabel" @click="cycleTheme"><Icon :name="themeIcon" :size="17" /></button><LanguageSwitcher v-model="language" class="join-language-switcher" :menu-label="t('languageMenu')" @change="persistLanguage" /></div>
       </header>
 
       <main class="join-content">
@@ -99,17 +99,20 @@
         <header class="workspace-header">
           <div class="breadcrumbs"><span class="mobile-brand">TeamSpeak <em>Web</em></span><span class="crumb-muted">{{ t('serverBreadcrumb') }}</span><Icon name="chevron-right" :size="14" /><strong>{{ currentChannelName }}</strong></div>
           <div class="workspace-actions">
-            <label v-if="channelTree.length" class="channel-switcher" :title="t('switchChannel')">
-              <Icon name="volume" :size="15" />
-              <select v-model="selectedChannelId" :aria-label="t('switchChannel')" @change="selectChannelById">
-                <option v-for="channelItem in channelTree" :key="channelItem.id" :value="channelItem.id">{{ channelLabel(channelItem) }}</option>
-              </select>
-            </label>
+            <div class="network-performance">
+              <button type="button" class="performance-trigger" :title="t('networkPerformance')" :aria-label="t('networkPerformance')" :aria-expanded="performancePanelOpen" @click.stop="togglePerformancePanel"><Icon name="activity" :size="16" /><span class="performance-trigger-label">{{ t('networkPerformance') }}</span><small v-if="performanceStats.ready && performanceStats.gatewayLatencyMs != null">{{ performanceStats.gatewayLatencyMs }} ms</small><Icon name="chevron-down" :size="13" /></button>
+              <section v-if="performancePanelOpen" class="performance-panel" role="dialog" :aria-label="t('networkPerformance')" @click.stop>
+                <header><div><strong>{{ t('networkPerformance') }}</strong><small>{{ t('networkPerformanceHint') }}</small></div><button type="button" class="performance-refresh" :title="t('measureNow')" :disabled="performanceRunning" @click="runPerformanceProbe"><Icon name="refresh" :size="15" /></button></header>
+                <div class="performance-route"><span>{{ t('browser') }}</span><i></i><span>{{ t('webSpeakGateway') }}</span><i></i><span>{{ t('teamSpeakServer') }}</span></div>
+                <div class="performance-metrics"><article><small>{{ t('browserToGateway') }}</small><strong>{{ performanceStats.gatewayLatencyMs == null ? '—' : `${performanceStats.gatewayLatencyMs} ms` }}</strong><span>{{ t('packetLoss') }} {{ performanceStats.gatewayLossPercent == null ? '—' : `${performanceStats.gatewayLossPercent}%` }}</span></article><article><small>{{ t('gatewayToTeamSpeak') }}</small><strong>{{ performanceStats.teamSpeakLatencyMs == null ? '—' : `${performanceStats.teamSpeakLatencyMs} ms` }}</strong><span>{{ t('packetLoss') }} {{ performanceStats.teamSpeakLossPercent == null ? '—' : `${performanceStats.teamSpeakLossPercent}%` }}</span></article></div>
+                <p class="performance-status">{{ performanceRunning ? t('measuring') : performanceStats.ready ? t('measureComplete') : t('measureUnavailable') }}</p>
+              </section>
+            </div>
             <button class="header-action" :title="t('copyInvite')" @click="doShare"><Icon name="share" :size="18" /></button>
             <button v-if="isMobileViewport" class="header-action microphone-header-toggle" :class="{ muted: microphoneMuted }" :title="microphoneMuted ? t('unmuteMic') : t('muteMic')" :aria-label="microphoneMuted ? t('microphoneMuted') : t('microphoneActive')" :aria-pressed="!microphoneMuted" @click="toggleMicrophone"><Icon :name="microphoneMuted ? 'mic-off' : 'mic'" :size="18" /></button>
             <button v-if="isMobileViewport" class="header-action" :title="t('audioSettings')" :aria-label="t('audioSettings')" @click="settingsOpen = true"><Icon name="settings" :size="18" /></button>
             <button type="button" class="header-action theme-toggle" :title="themeLabel" :aria-label="themeLabel" @click="cycleTheme"><Icon :name="themeIcon" :size="17" /></button>
-            <select v-model="language" class="language-select workspace-language" :aria-label="t('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select>
+            <LanguageSwitcher v-model="language" class="workspace-language" :menu-label="t('languageMenu')" @change="persistLanguage" />
             <button class="disconnect-button" @click="doDisconnect"><Icon name="door" :size="17" /><span>{{ t('exit') }}</span></button>
           </div>
         </header>
@@ -229,7 +232,7 @@
         <button type="button" :class="{ muted: microphoneMuted }" @click="toggleMicrophone"><Icon :name="microphoneMuted ? 'mic-off' : 'mic'" :size="18" /> {{ microphoneMuted ? t('unmuteMic') : t('muteMic') }}</button>
         <button type="button" @click="settingsOpen = true"><Icon name="settings" :size="18" /> {{ t('audioSettings') }}</button>
         <button type="button" @click="cycleTheme"><Icon :name="themeIcon" :size="18" /> {{ themeLabel }}</button>
-        <label class="language-menu-row"><Icon name="globe" :size="18" /><span>{{ t('languageMenu') }}</span><select v-model="language" class="language-select" :aria-label="t('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select></label>
+        <div class="language-menu-row"><Icon name="globe" :size="18" /><span>{{ t('languageMenu') }}</span><LanguageSwitcher v-model="language" :menu-label="t('languageMenu')" @change="persistLanguage" /></div>
         <button type="button" class="danger" @click="doDisconnect"><Icon name="door" :size="18" /> {{ t('exit') }}</button>
       </section>
 
@@ -285,7 +288,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import Icon from "../components/Icon.vue";
-import { useVoiceWebSocket, type ChannelInfo, type ChannelMember } from "../composables/useVoiceWebSocket.js";
+import LanguageSwitcher from "../components/LanguageSwitcher.vue";
+import { useVoiceWebSocket, type ChannelInfo, type ChannelMember, type LatencyProbeResult } from "../composables/useVoiceWebSocket.js";
 import { clearLocalData as clearStoredLocalData, isLocalPersistenceAvailable, listFavorites, listRecentServers, loadLocalPreferences, loadStoredIdentity, recordRecentServer, removeFavorite, removeStoredIdentity, saveFavorite, saveLocalPreferences, saveStoredIdentity, type FavoriteServer, type RecentServer } from "../services/local-persistence.js";
 import { applyTheme, getStoredTheme, isDarkTheme, nextTheme, saveTheme, type ThemeMode } from "../services/theme.js";
 import { combineTeamSpeakTarget, DEFAULT_TEAM_SPEAK_PORT, isValidTeamSpeakPort, splitTeamSpeakTarget } from "../services/teamspeak-target.js";
@@ -354,6 +358,7 @@ const {
   stopAccompaniment,
   checkSupport,
   clearError,
+  measureLatency,
 } = useVoiceWebSocket();
 
 const query = new URLSearchParams(location.search);
@@ -396,6 +401,11 @@ const memberMenu = ref<{ member: ChannelMember; x: number; y: number } | null>(n
 const mobileSection = ref<"channels" | "chat" | "voice" | "more">("channels");
 const isMobileViewport = ref(false);
 const whisperPttActive = ref(false);
+const performancePanelOpen = ref(false);
+const performanceRunning = ref(false);
+const performanceSamples = ref<LatencyProbeResult[]>([]);
+const performanceAttempts = ref(0);
+const performanceProbeCount = 4;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 type Language = "zh" | "en" | "de";
@@ -649,6 +659,18 @@ const translations: Record<string, Record<string, string>> = {
     done: "完成",
     voiceLobby: "语音大厅",
     languageMenu: "语言",
+    networkPerformance: "网络性能",
+    networkPerformanceHint: "浏览器到网关，再到 TeamSpeak 的实时探测",
+    browser: "浏览器",
+    webSpeakGateway: "WebSpeak",
+    teamSpeakServer: "TeamSpeak",
+    browserToGateway: "浏览器 → WebSpeak",
+    gatewayToTeamSpeak: "WebSpeak → TeamSpeak",
+    packetLoss: "丢包",
+    measuring: "正在测量…",
+    measureComplete: "已完成 4 次探测",
+    measureNow: "立即测量",
+    measureUnavailable: "连接后可测量",
     langSwitch: "English",
   },
   en: {
@@ -894,6 +916,18 @@ const translations: Record<string, Record<string, string>> = {
     done: "Done",
     voiceLobby: "Voice lobby",
     languageMenu: "Language",
+    networkPerformance: "Network performance",
+    networkPerformanceHint: "Live probes from the browser to WebSpeak and TeamSpeak",
+    browser: "Browser",
+    webSpeakGateway: "WebSpeak",
+    teamSpeakServer: "TeamSpeak",
+    browserToGateway: "Browser → WebSpeak",
+    gatewayToTeamSpeak: "WebSpeak → TeamSpeak",
+    packetLoss: "Packet loss",
+    measuring: "Measuring…",
+    measureComplete: "4 probes complete",
+    measureNow: "Measure now",
+    measureUnavailable: "Available after connecting",
     langSwitch: "中文",
   },
 };
@@ -1140,9 +1174,21 @@ translations.de = {
   saveChanges: "Änderungen speichern",
   close: "Schließen",
   done: "Fertig",
-  voiceLobby: "Sprachlobby",
-  languageMenu: "Sprache",
-  langSwitch: "中文",
+    voiceLobby: "Sprachlobby",
+    languageMenu: "Sprache",
+    networkPerformance: "Netzwerkleistung",
+    networkPerformanceHint: "Live-Messung vom Browser über WebSpeak zu TeamSpeak",
+    browser: "Browser",
+    webSpeakGateway: "WebSpeak",
+    teamSpeakServer: "TeamSpeak",
+    browserToGateway: "Browser → WebSpeak",
+    gatewayToTeamSpeak: "WebSpeak → TeamSpeak",
+    packetLoss: "Paketverlust",
+    measuring: "Wird gemessen…",
+    measureComplete: "4 Messungen abgeschlossen",
+    measureNow: "Jetzt messen",
+    measureUnavailable: "Nach der Verbindung verfügbar",
+    langSwitch: "中文",
 };
 
 function initialServerTarget() {
@@ -1302,6 +1348,22 @@ const chatTitle = computed(() => chatTab.value === "channel" ? t("channelChat", 
 const chatPlaceholder = computed(() => chatTab.value === "private" ? t("privateMessagePlaceholder") : chatTab.value === "server" ? t("serverMessagePlaceholder") : t("sendMessagePlaceholder"));
 const visiblePokes = computed(() => pokeNotifications.slice(-3));
 const memberMenuStyle = computed(() => memberMenu.value ? { left: `${memberMenu.value.x}px`, top: `${memberMenu.value.y}px` } : {});
+const median = (values: number[]) => {
+  const sorted = [...values].sort((left, right) => left - right);
+  return sorted.length ? sorted[Math.floor(sorted.length / 2)] : null;
+};
+const performanceStats = computed(() => {
+  const samples = performanceSamples.value;
+  const gatewaySamples = samples.map((sample) => sample.browserRttMs);
+  const teamSpeakSamples = samples.filter((sample) => sample.teamSpeakReachable && sample.teamSpeakLatencyMs != null).map((sample) => sample.teamSpeakLatencyMs as number);
+  return {
+    gatewayLatencyMs: median(gatewaySamples),
+    gatewayLossPercent: performanceAttempts.value >= performanceProbeCount ? Math.round(((performanceProbeCount - samples.length) / performanceProbeCount) * 100) : null,
+    teamSpeakLatencyMs: median(teamSpeakSamples),
+    teamSpeakLossPercent: performanceAttempts.value >= performanceProbeCount ? Math.round(((performanceProbeCount - teamSpeakSamples.length) / performanceProbeCount) * 100) : null,
+    ready: performanceAttempts.value >= performanceProbeCount,
+  };
+});
 
 watch(channelTree, (list) => {
   if (!selectedChannelId.value && list[0]) {
@@ -1376,6 +1438,32 @@ watch(() => voiceState.connected, (connected) => {
   };
   void recordRecentServer(recent).then(() => listRecentServers().then((items) => { recentServers.value = items; }));
 });
+
+function togglePerformancePanel() {
+  performancePanelOpen.value = !performancePanelOpen.value;
+  if (performancePanelOpen.value && !performanceRunning.value && !performanceStats.value.ready) void runPerformanceProbe();
+}
+
+function waitForPerformanceProbe(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function runPerformanceProbe() {
+  if (performanceRunning.value || !voiceState.connected) return;
+  performanceRunning.value = true;
+  performanceSamples.value = [];
+  performanceAttempts.value = 0;
+  try {
+    for (let index = 0; index < performanceProbeCount; index += 1) {
+      const sample = await measureLatency();
+      if (sample) performanceSamples.value.push(sample);
+      performanceAttempts.value += 1;
+      if (index < performanceProbeCount - 1) await waitForPerformanceProbe(220);
+    }
+  } finally {
+    performanceRunning.value = false;
+  }
+}
 watch(() => voiceState.reconnecting, (reconnecting, wasReconnecting) => {
   if (reconnecting && !wasReconnecting) {
     playNotification("disconnected");
@@ -1813,8 +1901,6 @@ function stopWhisperTalk(): void {
 .header-note { display: flex; align-items: center; gap: 8px; color: #71807c; font-size: 12px; }
 .language-switch { min-width: 50px; min-height: 28px; padding: 0 9px; color: #006a64; background: #e2f2ef; border: 1px solid #c8e6e1; border-radius: 7px; font-size: 10px; font-weight: 700; cursor: pointer; transition: .18s; }
 .language-switch:hover { color: #fff; background: #006a64; border-color: #006a64; }
-.language-select { min-width: 82px; min-height: 28px; padding: 0 24px 0 9px; color: #006a64; background: #e2f2ef; border: 1px solid #c8e6e1; border-radius: 7px; font-size: 10px; font-weight: 700; cursor: pointer; }
-.language-select:focus-visible { outline: 3px solid #69d2c7; outline-offset: 2px; }
 .language-menu-row { display: flex; align-items: center; gap: 10px; }
 .language-menu-row > span { flex: 1; }
 .tiny-dot, .online-dot, .status-pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #65d879; box-shadow: 0 0 0 4px rgba(101, 216, 121, .14); }
@@ -1958,8 +2044,6 @@ function stopWhisperTalk(): void {
 .identity-options[open] summary { margin-bottom: 10px; }
 .cancel-connect-button { justify-self: center; min-height: 32px; padding: 0 10px; color: #6b7d77; background: transparent; font-size: 11px; cursor: pointer; }
 .cancel-connect-button:hover { color: #006a64; text-decoration: underline; }
-.channel-switcher { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 8px; color: #006a64; background: #edf7f4; border: 1px solid #d7ebe6; border-radius: 8px; }
-.channel-switcher select { max-width: 165px; padding: 0 2px; color: #31514b; border: 0; outline: 0; background: transparent; font-size: 11px; cursor: pointer; }
 .member-panel { display: flex; flex-direction: column; min-height: 0; padding: 26px 18px 18px; overflow: hidden; }
 .member-tree { flex: 1; min-height: 0; margin-top: 18px; padding-right: 3px; overflow-y: auto; }
 .member-channel-group { padding: 8px 0 14px; border-bottom: 1px solid #e7eeeb; }
@@ -2007,7 +2091,6 @@ function stopWhisperTalk(): void {
 
 /* Increase connected-view typography by 25% while keeping the layout compact. */
 .app-shell .breadcrumbs { font-size: 15px; }
-.app-shell .channel-switcher select { font-size: 14px; }
 .app-shell .disconnect-button { font-size: 14px; }
 .app-shell .room-eyebrow { font-size: 12.5px; }
 .app-shell .live-pill { font-size: 11.25px; }
@@ -2062,7 +2145,7 @@ function stopWhisperTalk(): void {
 
 @media (min-width: 741px) and (max-width: 980px) { .app-shell { grid-template-columns: minmax(0, 1fr); }.member-panel { display: none; } }
 @media (max-width: 980px) { .app-shell { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(210px, 35dvh); }.workspace { height: auto; min-height: 0; }.member-panel { display: flex; border-top: 1px solid #eef2f0; border-left: 0; padding: 16px 18px; }.member-tree { margin-top: 10px; } }
-@media (max-width: 740px) { .app-shell { display: grid; grid-template-rows: minmax(0, 1fr) 220px; }.channel-switcher { max-width: 150px; }.channel-switcher select { max-width: 112px; }.app-shell .room-hero h1 { font-size: 27.5px; }.app-shell .room-hero p { font-size: 13.75px; }.app-shell .section-heading h2 { font-size: 21.25px; }.app-shell .message-bubble, .app-shell .message-composer input { font-size: 13.75px; }.app-shell .mic-mode-switch button { font-size: 11.25px; }.settings-modal .settings-content { padding: 24px 20px; }.settings-modal .settings-header h2 { font-size: 23.75px; } }
+@media (max-width: 740px) { .app-shell { display: grid; grid-template-rows: minmax(0, 1fr) 220px; }.app-shell .room-hero h1 { font-size: 27.5px; }.app-shell .room-hero p { font-size: 13.75px; }.app-shell .section-heading h2 { font-size: 21.25px; }.app-shell .message-bubble, .app-shell .message-composer input { font-size: 13.75px; }.app-shell .mic-mode-switch button { font-size: 11.25px; }.settings-modal .settings-content { padding: 24px 20px; }.settings-modal .settings-header h2 { font-size: 23.75px; } }
 
 /* Keep the connected workspace sized to the browser viewport and let the
    workspace and member tree own their scroll areas when the window shrinks. */
@@ -2186,7 +2269,7 @@ function stopWhisperTalk(): void {
 .settings-content, .settings-nav { background: var(--surface-1); }
 .settings-nav { border-right-color: var(--border); }
 .settings-section h3, .settings-header h2 { color: var(--text-primary); }
- .settings-select, .language-select { background: var(--surface-2); border-color: var(--border); color: var(--text-primary); }
+ .settings-select { background: var(--surface-2); border-color: var(--border); color: var(--text-primary); }
 .audio-level-track, .meter i { background: var(--border); }
 .member-presence { border-color: var(--surface-1); }
 .member-row:hover, .member-row:focus-within { background: color-mix(in srgb, var(--accent) 10%, var(--surface-1)); box-shadow: 0 4px 12px color-mix(in srgb, var(--text-primary) 8%, transparent); }
@@ -2327,8 +2410,6 @@ function stopWhisperTalk(): void {
   .workspace-actions { flex: 0 0 auto; gap: 3px; }
   .workspace-actions .header-action { width: 36px; height: 36px; flex-basis: 36px; }
   .workspace-actions .theme-toggle, .workspace-actions .workspace-language { display: none; }
-  .channel-switcher { max-width: 132px; min-height: 36px; padding-inline: 9px; }
-  .channel-switcher select { max-width: 92px; font-size: 12px; }
   .disconnect-button { width: 36px; height: 36px; min-height: 36px; margin-left: 0; padding: 0; justify-content: center; }
   .disconnect-button .ui-icon { display: block; margin: 0; }
   .disconnect-button span { display: none; }
@@ -2437,10 +2518,8 @@ function stopWhisperTalk(): void {
   .join-page .header-tools { gap: 4px; }
   .join-page .github-button, .join-page .changelog-button, .join-page .guide-button { width: 32px; min-width: 32px; min-height: 32px; height: 32px; }
   .join-page .version-badge { min-height: 32px; padding-inline: 6px; font-size: 10px; }
-  .join-page .language-select { min-width: 82px; padding-inline: 6px; font-size: 11px; }
+  .join-page .language-switcher { min-width: 62px; }
   .workspace-header { padding-inline: 10px; }
-  .channel-switcher { max-width: 112px; }
-  .channel-switcher select { max-width: 72px; }
   .workspace-actions .header-action { width: 32px; height: 32px; flex-basis: 32px; }
   .disconnect-button { width: 32px; height: 32px; }
   .room-hero { padding-inline: 16px; }
@@ -2466,7 +2545,7 @@ function stopWhisperTalk(): void {
   .join-page .github-button .ui-icon { width: 16px; height: 16px; }
   .join-page .bilibili-glyph { width: 18px; height: 18px; }
   .join-page .version-badge { min-width: 28px; min-height: 28px; padding-inline: 4px; font-size: 9px; }
-  .join-page .language-select { min-width: 76px; min-height: 28px; padding-inline: 4px; font-size: 10px; }
+  .join-page .language-switcher { min-width: 58px; }
 }
 
 @media (max-width: 360px) {
@@ -2499,5 +2578,40 @@ function stopWhisperTalk(): void {
 @media (max-width: 420px) {
   .join-page .bilibili-button { width: 28px; min-width: 28px; min-height: 28px; height: 28px; padding: 0; }
   .join-page .qq-button { width: 28px; min-width: 28px; min-height: 28px; height: 28px; padding: 0; }
+}
+
+.network-performance { position: relative; z-index: 8; }
+.performance-trigger { display: inline-flex; align-items: center; gap: 6px; min-height: 33px; padding: 0 9px; color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-1)); border: 1px solid var(--border); border-radius: 8px; font-size: 11px; cursor: pointer; transition: .16s; }
+.performance-trigger:hover, .performance-trigger[aria-expanded="true"] { background: color-mix(in srgb, var(--accent) 15%, var(--surface-1)); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+.performance-trigger small { color: var(--text-muted); font-size: 10px; }
+.performance-panel { position: absolute; top: calc(100% + 10px); right: 0; width: 330px; padding: 15px; color: var(--text-primary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 13px; box-shadow: 0 16px 36px color-mix(in srgb, var(--text-primary) 18%, transparent); }
+.performance-panel header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.performance-panel header strong, .performance-panel header small { display: block; }
+.performance-panel header strong { font-size: 13px; }
+.performance-panel header small { max-width: 255px; margin-top: 4px; color: var(--text-muted); font-size: 10px; line-height: 1.45; }
+.performance-refresh { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; color: var(--accent); background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; cursor: pointer; }
+.performance-refresh:disabled { cursor: wait; opacity: .55; }
+.performance-route { display: flex; align-items: center; gap: 6px; margin: 15px 0 11px; color: var(--text-muted); font-size: 9px; }
+.performance-route span { padding: 4px 6px; background: var(--surface-2); border-radius: 5px; white-space: nowrap; }
+.performance-route i { width: 18px; height: 1px; flex: 1; background: var(--accent); opacity: .55; }
+.performance-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.performance-metrics article { min-width: 0; padding: 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; }
+.performance-metrics small, .performance-metrics strong, .performance-metrics span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.performance-metrics small { color: var(--text-muted); font-size: 9px; }
+.performance-metrics strong { margin-top: 6px; color: var(--accent); font-size: 18px; }
+.performance-metrics span { margin-top: 4px; color: var(--text-muted); font-size: 9px; }
+.performance-status { margin: 11px 0 0; color: var(--text-muted); font-size: 10px; }
+
+@media (max-width: 740px) {
+  .performance-trigger { width: 36px; height: 36px; min-height: 36px; justify-content: center; padding: 0; }
+  .performance-trigger-label, .performance-trigger small, .performance-trigger > .ui-icon:last-child { display: none; }
+  .performance-panel { position: fixed; top: calc(60px + env(safe-area-inset-top, 0px)); right: 10px; width: min(340px, calc(100vw - 20px)); }
+}
+
+@media (max-width: 390px) {
+  .performance-trigger { width: 32px; height: 32px; flex-basis: 32px; }
+  .performance-panel { right: 8px; width: min(330px, calc(100vw - 16px)); padding: 13px; }
+  .performance-route { gap: 3px; }
+  .performance-route span { padding-inline: 4px; font-size: 8px; }
 }
 </style>

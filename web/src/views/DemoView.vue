@@ -2,7 +2,7 @@
   <div class="demo-page">
     <header class="demo-header">
       <div class="demo-brand"><span><Icon name="waveform" :size="21" /></span><div><strong>WebSpeak</strong><small>{{ copy.browserClient }}</small></div></div>
-      <div class="demo-tools"><span class="demo-badge">{{ copy.demoBadge }}</span><select v-model="language" :aria-label="copy.languageMenu" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select><a href="/">{{ copy.back }}</a></div>
+      <div class="demo-tools"><span class="demo-badge">{{ copy.demoBadge }}</span><LanguageSwitcher v-model="language" :menu-label="copy.languageMenu" @change="persistLanguage" /><a href="/">{{ copy.back }}</a></div>
     </header>
 
     <div v-if="reconnecting" class="demo-reconnect" role="status"><Icon name="refresh" :size="17" /><span>{{ copy.reconnecting }}</span><button type="button" @click="reconnecting = false">{{ copy.restore }}</button></div>
@@ -34,6 +34,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import Icon from "../components/Icon.vue";
+import LanguageSwitcher from "../components/LanguageSwitcher.vue";
 
 type Language = "zh" | "en" | "de";
 interface DemoMessage { id: number; author: string; time: string; text: string; zhText?: string; enText?: string; mine: boolean }
@@ -93,5 +94,4 @@ function avatarStyle(name: string) { let hash = 0; for (const char of name) hash
 :global(:root[data-theme="dark"]) .demo-chat-head, :global(:root[data-theme="dark"]) .demo-user { border-color: #30413d; }
 @media (prefers-color-scheme: dark) { :global(:root[data-theme="system"]) .demo-channel-panel, :global(:root[data-theme="system"]) .demo-actions-panel, :global(:root[data-theme="system"]) .demo-main, :global(:root[data-theme="system"]) .demo-voice-card { background: #172321; border-color: #30413d; } }
 :global(button:focus-visible), :global(a:focus-visible), :global(input:focus-visible), :global(select:focus-visible) { outline: 3px solid #69d2c7; outline-offset: 2px; }
-.demo-tools select { padding: 7px 24px 7px 10px; color: #006a64; background: #e1f2ee; border: 1px solid #cbe6e0; border-radius: 7px; font-size: 11px; font-weight: 700; cursor: pointer; }
 </style>

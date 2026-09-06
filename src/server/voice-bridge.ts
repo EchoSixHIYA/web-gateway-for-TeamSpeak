@@ -13,6 +13,7 @@ import { SessionManager, type ManagedSession, type SessionTeardownReason } from 
 import { parseClientCommand, type ClientCommand } from "./voice-protocol.js";
 import { isRecoverable, reconnectDelayMs, reconnectWindowOpen } from "./reconnect-policy.js";
 import { WebRtcAudioSession, type WebRtcAudioOptions, type WebRtcAudioStats, type WebRtcSessionDescription } from "./webrtc-audio.js";
+import { pingTeamSpeakPort } from "./network-probe.js";
 
 const require = createRequire(import.meta.url);
 const { OpusEncoder } = require("@discordjs/opus") as {
@@ -131,6 +132,7 @@ interface WebClientEntry {
   reconnectTimer: ReturnType<typeof setTimeout> | null;
   audio: AudioFlowStats;
   webrtc: WebRtcAudioSession | null;
+  lastLatencyProbeAt: number;
 }
 
 export class VoiceBridge {
@@ -222,6 +224,7 @@ export class VoiceBridge {
         reconnectTimer: null,
         audio: createAudioFlowStats(),
         webrtc: null,
+        lastLatencyProbeAt: 0,
       };
       this.entries.set(entryId, entry!);
       try {
@@ -865,6 +868,22 @@ async function handleCommand(
   command: ClientCommand,
   sendJson: (message: Record<string, unknown>) => void,
 ): Promise<void> {
+  if (command.type === "latencyProbe") {
+    const sequence = command.payload.sequence as string;
+    const now = Date.now();
+    if (now - entry.lastLatencyProbeAt < 150) return;
+    entry.lastLatencyProbeAt = now;
+    const result = await pingTeamSpeakPort(entry.target);
+    sendJson({
+      type: "latencyPong",
+      sequence,
+      teamSpeakLatencyMs: result.latencyMs,
+      teamSpeakReachable: result.ok,
+      teamSpeakErrorCode: result.errorCode ?? null,
+    });
+    return;
+  }
+
   if (command.type === "switchChannel") {
     const rawId = command.payload.channelId as string;
     const channelPassword = typeof command.payload.password === "string" ? command.payload.password : "";

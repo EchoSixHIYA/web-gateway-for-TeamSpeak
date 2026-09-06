@@ -77,6 +77,13 @@ export interface ServerEvent {
   timestamp: number;
 }
 
+export interface LatencyProbeResult {
+  browserRttMs: number;
+  teamSpeakLatencyMs: number | null;
+  teamSpeakReachable: boolean;
+  teamSpeakErrorCode?: string;
+}
+
 export function useVoiceWebSocket() {
   const ws = ref<WebSocket | null>(null);
   const state = reactive<VoiceState>({ connected: false, connecting: false, reconnecting: false, reconnectAttempt: 0, reconnectFailed: false, tsClientId: 0, error: "", errorCode: "", channelSwitchedChannelId: "" });
@@ -87,6 +94,8 @@ export function useVoiceWebSocket() {
   const pokeNotifications = reactive<{ id: string; invokerId: number; invokerUid: string; invokerName: string; message: string; timestamp: number }[]>([]);
   let connectionSequence = 0;
   let lastConnection: { target: string; channel: string; nickname: string; serverPassword: string; identity?: string; rememberIdentity: boolean } | null = null;
+  let latencyProbeSequence = 0;
+  const pendingLatencyProbes = new Map<string, { startedAt: number; resolve: (result: LatencyProbeResult | null) => void; timer: ReturnType<typeof setTimeout> }>();
   let webrtcPeer: RTCPeerConnection | null = null;
   let webrtcOutputElement: SinkAudioElement | null = null;
   let webrtcPlaybackStream: MediaStream | null = null;
@@ -1137,6 +1146,7 @@ export function useVoiceWebSocket() {
     };
     socket.onclose = (event) => {
       if (sequence !== connectionSequence) return;
+      clearLatencyProbes();
       state.connected = false;
       state.connecting = false;
       state.reconnecting = false;
@@ -1173,6 +1183,7 @@ export function useVoiceWebSocket() {
 
   function disconnect(preserveConnection = false): void {
     connectionSequence++;
+    clearLatencyProbes();
     const keepRememberedIdentity = lastConnection?.rememberIdentity === true;
     if (!preserveConnection) lastConnection = null;
     stopMicrophone();
@@ -1202,6 +1213,14 @@ export function useVoiceWebSocket() {
     whisperTargetIds.clear();
     whisperActive.value = false;
     for (const key of Object.keys(volumes)) delete volumes[Number(key)];
+  }
+
+  function clearLatencyProbes(): void {
+    for (const [sequence, pending] of pendingLatencyProbes) {
+      clearTimeout(pending.timer);
+      pendingLatencyProbes.delete(sequence);
+      pending.resolve(null);
+    }
   }
 
   function handleMessage(msg: any): void {
@@ -1306,6 +1325,20 @@ export function useVoiceWebSocket() {
         state.error = "";
         state.errorCode = "";
         break;
+      case "latencyPong": {
+        const sequence = typeof msg.sequence === "string" ? msg.sequence : "";
+        const pending = pendingLatencyProbes.get(sequence);
+        if (!pending) break;
+        pendingLatencyProbes.delete(sequence);
+        clearTimeout(pending.timer);
+        pending.resolve({
+          browserRttMs: Math.max(0, Math.round(performance.now() - pending.startedAt)),
+          teamSpeakLatencyMs: typeof msg.teamSpeakLatencyMs === "number" ? msg.teamSpeakLatencyMs : null,
+          teamSpeakReachable: msg.teamSpeakReachable === true,
+          ...(typeof msg.teamSpeakErrorCode === "string" ? { teamSpeakErrorCode: msg.teamSpeakErrorCode } : {}),
+        });
+        break;
+      }
       case "disconnected":
         state.connected = false;
         state.connecting = false;
@@ -1385,6 +1418,20 @@ export function useVoiceWebSocket() {
     state.errorCode = "";
     state.channelSwitchedChannelId = "";
     sendCmd("switchChannel", { channelId, ...(password ? { password } : {}) });
+  }
+
+  function measureLatency(timeoutMs = 2_200): Promise<LatencyProbeResult | null> {
+    const socket = ws.value;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return Promise.resolve(null);
+    const sequence = `latency-${Date.now().toString(36)}-${(latencyProbeSequence++).toString(36)}`;
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        pendingLatencyProbes.delete(sequence);
+        resolve(null);
+      }, timeoutMs);
+      pendingLatencyProbes.set(sequence, { startedAt: performance.now(), resolve, timer });
+      sendCmd("latencyProbe", { sequence });
+    });
   }
 
   function sendTextMessage(message: string, targetId = ""): void {
@@ -1611,5 +1658,6 @@ export function useVoiceWebSocket() {
     stopAccompaniment,
     checkSupport,
     clearError,
+    measureLatency,
   };
 }

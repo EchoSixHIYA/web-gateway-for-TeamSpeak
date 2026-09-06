@@ -7,18 +7,27 @@
 - 增加 Deutsch 界面支持和 Telegram 群组入口。
 - 增加桌面端整体音量滑块，默认收起并在悬停时展开。
 - 修复伴奏音量忽大忽小的问题。
+- 增加可展开的网络性能面板，显示浏览器、WebSpeak 与 TeamSpeak 之间的延迟和丢包率。
+- 管理员连接测试改用多次网络探测并显示丢包率。
+- 统一中文、English、Deutsch 的旗帜代码语言菜单。
 
 ### English
 
 - Added German UI support and a Telegram community link.
 - Added a compact desktop master-volume slider that expands on hover.
 - Fixed accompaniment volume fluctuations.
+- Added an expandable network performance panel with latency and packet loss across the browser, WebSpeak, and TeamSpeak path.
+- Updated the administrator connection test to use repeated reachability probes and report packet loss.
+- Unified the Chinese, English, and German flag/code language menu.
 
 ### Deutsch
 
 - Deutsche Benutzeroberfläche und Telegram-Community-Link hinzugefügt.
 - Kompakten Gesamtlautstärkeregler für den Desktop ergänzt, der sich beim Überfahren öffnet.
 - Schwankende Lautstärke bei der Begleittonfreigabe behoben.
+- Aufklappbares Netzwerkleistungsfeld mit Latenz und Paketverlust zwischen Browser, WebSpeak und TeamSpeak ergänzt.
+- Verbindungstest in der Administration auf wiederholte Erreichbarkeitsprüfungen mit Paketverlustanzeige umgestellt.
+- Einheitliches Sprachmenü mit Flaggen und Sprachcodes für Chinesisch, Englisch und Deutsch ergänzt.
 
 ## [0.1.6] — 2026-09-04
 

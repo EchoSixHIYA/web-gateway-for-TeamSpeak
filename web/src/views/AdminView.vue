@@ -7,7 +7,7 @@
         <div class="admin-brand centered"><span><Icon name="waveform" :size="24" /></span><div><strong>WebSpeak</strong><small>{{ tr('adminConsole') }}</small></div></div>
         <header><h1>{{ tr('changePasswordTitle') }}</h1><p>{{ tr('changePasswordLead') }}</p></header>
         <form @submit.prevent="changePassword"><div v-if="errorMessage" class="alert error">{{ errorMessage }}</div><label><span>{{ tr('newPassword') }}</span><input v-model="newPassword" type="password" autocomplete="new-password" maxlength="1024" autofocus :placeholder="tr('passwordPlaceholder')" /></label><label><span>{{ tr('confirmPassword') }}</span><input v-model="confirmNewPassword" type="password" autocomplete="new-password" maxlength="1024" /></label><div class="strength"><i :style="{ width: `${passwordStrength}%` }"></i></div><button class="primary-button wide" :disabled="submitting" type="submit"><span v-if="submitting" class="spinner small"></span>{{ tr('savePassword') }}</button></form>
-        <p class="security-note">{{ tr('defaultCredentialNotice') }}</p><select v-model="language" class="language-select language-link" :aria-label="tr('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select>
+        <p class="security-note">{{ tr('defaultCredentialNotice') }}</p><LanguageSwitcher v-model="language" class="language-link" :menu-label="tr('languageMenu')" @change="persistLanguage" />
       </section>
     </main>
 
@@ -16,7 +16,7 @@
         <div class="admin-brand centered"><span><Icon name="waveform" :size="24" /></span><div><strong>WebSpeak</strong><small>{{ tr('adminConsole') }}</small></div></div>
         <header><h1>{{ tr('welcomeAdmin') }}</h1><p>{{ tr('loginLead') }}</p></header>
         <form @submit.prevent="login"><div v-if="errorMessage" class="alert error">{{ errorMessage }}</div><label><span>{{ tr('adminUsername') }}</span><input v-model.trim="loginUsername" autocomplete="username" autofocus /></label><label><span>{{ tr('adminPassword') }}</span><input v-model="loginPassword" type="password" autocomplete="current-password" /></label><button class="primary-button wide" :disabled="submitting" type="submit"><span v-if="submitting" class="spinner small"></span>{{ tr('login') }}</button></form>
-        <div class="login-actions"><RouterLink to="/" class="home-link"><Icon name="home" :size="15" />{{ tr('backHome') }}</RouterLink><select v-model="language" class="language-select language-link" :aria-label="tr('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select></div>
+        <div class="login-actions"><RouterLink to="/" class="home-link"><Icon name="home" :size="15" />{{ tr('backHome') }}</RouterLink><LanguageSwitcher v-model="language" class="language-link" :menu-label="tr('languageMenu')" @change="persistLanguage" /></div>
       </section>
     </main>
 
@@ -28,7 +28,7 @@
       </aside>
 
       <main class="admin-main">
-        <header class="admin-topbar"><div><small>{{ tr('adminConsole') }}</small><h1>{{ currentPageTitle }}</h1></div><div><span class="running-dot"></span>{{ tr('gatewayRunning') }}<button type="button" class="theme-toggle" :title="themeLabel" :aria-label="themeLabel" @click="cycleTheme"><Icon :name="themeIcon" :size="17" /><span>{{ themeLabel }}</span></button><select v-model="language" class="language-select" :aria-label="tr('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select></div></header>
+        <header class="admin-topbar"><div><small>{{ tr('adminConsole') }}</small><h1>{{ currentPageTitle }}</h1></div><div><span class="running-dot"></span>{{ tr('gatewayRunning') }}<button type="button" class="theme-toggle" :title="themeLabel" :aria-label="themeLabel" @click="cycleTheme"><Icon :name="themeIcon" :size="17" /><span>{{ themeLabel }}</span></button><LanguageSwitcher v-model="language" :menu-label="tr('languageMenu')" @change="persistLanguage" /></div></header>
 
         <div v-if="errorMessage" class="alert error page-alert">{{ errorMessage }}</div>
         <section v-if="route.path === '/admin/server'" class="page-content server-page">
@@ -71,13 +71,14 @@
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import Icon from "../components/Icon.vue";
+import LanguageSwitcher from "../components/LanguageSwitcher.vue";
 import { combineTeamSpeakTarget, splitTeamSpeakTarget } from "../services/teamspeak-target.js";
 import { applyTheme, getStoredTheme, isDarkTheme, nextTheme, saveTheme, type ThemeMode } from "../services/theme.js";
 
 type Language = "zh" | "en" | "de";
 type Screen = "login" | "change-password" | "admin";
 type AccessMode = "fixed" | "open";
-interface ProbeState { ok: boolean; latencyMs?: number; serverName?: string | null; code?: string }
+interface ProbeState { ok: boolean; latencyMs?: number; serverName?: string | null; packetLossPercent?: number; attempts?: number; successfulAttempts?: number; code?: string; errorCode?: string }
 
 const route = useRoute();
 const router = useRouter();
@@ -161,8 +162,9 @@ const copy = {
     remove: "移除",
     testConnection: "测试连接",
     testing: "正在测试…",
-    connectionReady: "连接成功",
-    connectionFailed: "连接失败",
+     connectionReady: "连接成功",
+     connectionFailed: "连接失败",
+     packetLoss: "丢包率",
     accessAndIdentity: "访问与站点信息",
     advancedSettings: "高级参数",
     advancedSettingsLead: "仅在需要时调整网关的高级传输参数。",
@@ -330,8 +332,9 @@ const copy = {
     remove: "Remove",
     testConnection: "Test connection",
     testing: "Testing…",
-    connectionReady: "Connection ready",
-    connectionFailed: "Connection failed",
+     connectionReady: "Connection ready",
+     connectionFailed: "Connection failed",
+     packetLoss: "Packet loss",
     accessAndIdentity: "Access and site identity",
     advancedSettings: "Advanced settings",
     advancedSettingsLead: "Adjust gateway transport options only when needed.",
@@ -498,6 +501,7 @@ const germanCopy = {
   testing: "Wird getestet…",
   connectionReady: "Verbindung hergestellt",
   connectionFailed: "Verbindung fehlgeschlagen",
+  packetLoss: "Paketverlust",
   accessAndIdentity: "Zugriff und Website-Informationen",
   advancedSettings: "Erweiterte Einstellungen",
   advancedSettingsLead: "Erweiterte Gateway-Transportparameter nur bei Bedarf ändern.",
@@ -582,7 +586,7 @@ const germanCopy = {
 function tr(key: keyof typeof copy.zh, vars: Record<string, string | number> = {}): string { let value: string = language.value === "zh" ? copy.zh[key] : language.value === "de" ? germanCopy[key] ?? copy.en[key] ?? copy.zh[key] : copy.en[key] ?? copy.zh[key]; for (const [name, replacement] of Object.entries(vars)) value = value.replaceAll(`{{${name}}}`, String(replacement)); return value; }
 const passwordStrength = computed(() => Math.min(100, Math.max(8, newPassword.value.length * 5 + (/[\s\W]/.test(newPassword.value) ? 15 : 0))));
 const currentPageTitle = computed(() => route.path === "/admin/server" ? tr('server') : route.path === "/admin/operations" ? tr('operations') : tr('overview'));
-const testResultText = computed(() => { if (!testResult.value) return ""; if (!testResult.value.ok) return errorText(testResult.value.code); return [testResult.value.serverName, testResult.value.latencyMs == null ? null : `${testResult.value.latencyMs} ms`].filter(Boolean).join(" · "); });
+const testResultText = computed(() => { if (!testResult.value) return ""; const result = testResult.value; const loss = result.packetLossPercent == null ? null : `${tr('packetLoss')} ${result.packetLossPercent}%`; if (!result.ok) return [errorText(result.code ?? result.errorCode), loss].filter(Boolean).join(" · "); return [result.serverName, result.latencyMs == null ? null : `${result.latencyMs} ms`, loss].filter(Boolean).join(" · "); });
 const targetStatusText = computed(() => overview.teamSpeak.status === "reachable" ? tr('reachable') : overview.teamSpeak.status === "unreachable" ? tr('unreachable') : tr('notTested'));
 const webrtcPortRangeText = computed(() => `${serverForm.webRtcUdpStart}–${serverForm.webRtcUdpEnd}`);
 
@@ -605,7 +609,7 @@ function showOperationNotice(message: string) { errorMessage.value = message; wi
 async function downloadBackup() { try { const response = await fetch("/api/admin/backup", { headers: { accept: "application/octet-stream" } }); if (!response.ok) throw new Error("BACKUP_FAILED"); const blob = await response.blob(); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = `webspeak-backup-${new Date().toISOString().slice(0, 10)}.db`; anchor.click(); URL.revokeObjectURL(url); await loadOperations(); } catch (error) { errorMessage.value = errorText((error as ApiError).code); } }
 async function saveServerSettings() { submitting.value = true; errorMessage.value = ""; try { const result = await sendJson("/api/admin/server", "PUT", serverPayload()); const target = splitTeamSpeakTarget(result.settings?.target); Object.assign(serverForm, result.settings, { address: target.address, port: target.port, serverPassword: "", passwordAction: "keep", webRtcEnabled: result.settings.webRtcEnabled === true, webRtcUdpStart: Number(result.settings.webRtcUdpStart || 40000), webRtcUdpEnd: Number(result.settings.webRtcUdpEnd || 40099) }); await loadOverview(); } catch (error) { errorMessage.value = errorText((error as ApiError).code); } finally { submitting.value = false; } }
 function handleWebRtcToggle() { if (serverForm.webRtcEnabled) webrtcPortNoticeOpen.value = true; }
-async function testServerConnection() { await runTest("/api/admin/server/test", { target: combineTeamSpeakTarget(serverForm.address, serverForm.port), serverPassword: serverForm.passwordAction === "replace" ? serverForm.serverPassword : undefined, passwordAction: serverForm.passwordAction }); if (testResult.value?.ok) { await loadOverview(); serverForm.lastTestAt = new Date().toISOString(); serverForm.lastTestLatencyMs = testResult.value.latencyMs ?? null; } }
+async function testServerConnection() { await runTest("/api/admin/server/test", { target: combineTeamSpeakTarget(serverForm.address, serverForm.port), serverPassword: serverForm.passwordAction === "replace" ? serverForm.serverPassword : undefined, passwordAction: serverForm.passwordAction }); if (testResult.value) { await loadOverview(); serverForm.lastTestAt = new Date().toISOString(); serverForm.lastTestLatencyMs = testResult.value.ok ? (testResult.value.latencyMs ?? null) : null; } }
 function serverPayload() { return { target: combineTeamSpeakTarget(serverForm.address, serverForm.port), serverPassword: serverForm.passwordAction === "replace" ? serverForm.serverPassword : undefined, passwordAction: serverForm.passwordAction, accessMode: serverForm.accessMode, siteName: serverForm.siteName, welcomeText: serverForm.welcomeText, welcomeTextEn: serverForm.welcomeTextEn, webRtcEnabled: serverForm.webRtcEnabled, webRtcUdpStart: serverForm.webRtcUdpStart, webRtcUdpEnd: serverForm.webRtcUdpEnd }; }
 async function runTest(url: string, body: Record<string, unknown>) { testing.value = true; errorMessage.value = ""; testResult.value = null; try { testResult.value = await sendJson(url, "POST", body, url.includes("/server/test")); } catch (error) { testResult.value = { ok: false, code: (error as ApiError).code }; } finally { testing.value = false; } }
 async function dismissLegacyNotice() { await sendJson("/api/admin/legacy-import/dismiss", "POST", {}); overview.legacyConfigImported = false; }
@@ -855,4 +859,6 @@ async function parseResponse(response: Response) { const value = await response.
 .login-actions .language-link{margin-top:0}
 .home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;color:#08766e;background:#e4f3ef;border:1px solid #cae7e0;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none}
 .home-link:hover{background:#d8eee9}
+.language-link{margin-top:20px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important}
+.login-actions .language-link{margin-top:0!important}
 </style>

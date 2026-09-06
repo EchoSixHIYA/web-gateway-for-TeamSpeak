@@ -130,7 +130,7 @@ WebSpeak 面向希望通过网页提供 TeamSpeak 语音服务的个人、社区
 
 | 版本 | 日期 | 摘要 |
 | --- | --- | --- |
-| [v0.1.7](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.7) | 2026-09-06 | 增加德语支持、Telegram 群组入口和桌面端整体音量滑块，修复伴奏音量波动。 |
+| [v0.1.7](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.7) | 2026-09-06 | 增加德语支持、Telegram 群组入口、网络性能面板和丢包率测试，优化语言菜单与桌面端音量控制，修复伴奏音量波动。 |
 | [v0.1.6](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.6) | 2026-09-04 | 新增桌面端伴奏、身份保持提醒和网站图标，并修复 WebRTC 下的成员独立音量。 |
 | [v0.1.5](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.5) | 2026-09-04 | 修复身份保持逻辑，优化主题切换按钮。 |
 | [v0.1.4](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.4) | 2026-09-03 | 修复 WebRTC 语音和频道聊天，优化管理页、日志与移动端布局。 |
@@ -268,7 +268,7 @@ WebSpeak is built for individuals, communities, and server operators who want to
 
 | Version | Date | Summary |
 | --- | --- | --- |
-| [v0.1.7](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.7) | 2026-09-06 | Added German support, a Telegram community link, and a compact desktop master-volume slider; fixed accompaniment volume fluctuations. |
+| [v0.1.7](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.7) | 2026-09-06 | Added German support, a Telegram community link, network performance and packet-loss checks; refined the language menu and desktop volume control; fixed accompaniment volume fluctuations. |
 | [v0.1.6](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.6) | 2026-09-04 | Added desktop accompaniment, remembered-identity guidance, and the site icon; fixed per-member volume under WebRTC. |
 | [v0.1.5](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.5) | 2026-09-04 | Fixed identity persistence and refined the theme switch. |
 | [v0.1.4](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.4) | 2026-09-03 | Fixed WebRTC voice and channel chat; improved administration, logs, and mobile layouts. |
@@ -406,7 +406,7 @@ WebSpeak ist ein selbst gehosteter TeamSpeak-3-/TeamSpeak-6-Webclient und ein Sp
 
 | Version | Datum | Zusammenfassung |
 | --- | --- | --- |
-| [v0.1.7](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.7) | 2026-09-06 | Deutsche Oberfläche, Telegram-Link und kompakter Gesamtlautstärkeregler hinzugefügt; Lautstärkeschwankungen bei Begleittönen behoben. |
+| [v0.1.7](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.7) | 2026-09-06 | Deutsche Oberfläche, Telegram-Link, Netzwerkleistungs- und Paketverlustprüfung hinzugefügt; Sprachmenü und Desktop-Lautstärkeregler verbessert; Lautstärkeschwankungen bei Begleittönen behoben. |
 | [v0.1.6](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.6) | 2026-09-04 | Desktop-Begleitton, Hinweise zur Identität und Website-Symbol hinzugefügt; individuelle Lautstärke unter WebRTC korrigiert. |
 | [v0.1.5](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.5) | 2026-09-04 | Identitätsspeicherung korrigiert und Designumschaltung verbessert. |
 | [v0.1.4](https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/releases/tag/v0.1.4) | 2026-09-03 | WebRTC und Kanalchat korrigiert; Administrationsseite, Protokolle und Mobilansicht verbessert. |
