@@ -11,6 +11,7 @@
 - 管理员连接测试改用服务端多次主机 Ping 并显示丢包率，不再创建临时 TeamSpeak 客户端。
 - 统一中文、English、Deutsch 的旗帜代码语言菜单。
 - 修复 TeamSpeak 使用 TCP 探测导致的误报丢包，并修正语言菜单异常留白。
+- 移除 WebRTC 桥接中的 RMS 静音帧过滤，安静帧仅用于发言状态指示，不再丢弃。
 
 ### English
 
@@ -21,6 +22,7 @@
 - Updated the administrator connection test to use repeated host pings, report packet loss, and avoid creating temporary TeamSpeak clients.
 - Unified the Chinese, English, and German flag/code language menu.
 - Fixed false packet-loss reports caused by probing the TeamSpeak UDP service with TCP, and corrected excess space in the language menu.
+- Removed RMS-based silence filtering from the WebRTC bridge; quiet frames are now retained for the codec timeline.
 
 ### Deutsch
 
@@ -31,6 +33,7 @@
 - Verbindungstest in der Administration auf wiederholte Host-Pings mit Paketverlustanzeige umgestellt, ohne temporäre TeamSpeak-Clients zu erzeugen.
 - Einheitliches Sprachmenü mit Flaggen und Sprachcodes für Chinesisch, Englisch und Deutsch ergänzt.
 - Falsche Paketverlustmeldungen durch TCP-Prüfung des UDP-Dienstes behoben und übermäßigen Leerraum im Sprachmenü korrigiert.
+- RMS-basierte Stillefilterung aus der WebRTC-Brücke entfernt; leise Frames bleiben nun im Codec-Zeitverlauf erhalten.
 
 ## [0.1.6] — 2026-09-04
 

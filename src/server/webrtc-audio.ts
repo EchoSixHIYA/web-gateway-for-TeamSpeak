@@ -30,13 +30,10 @@ const MAX_MIXER_QUEUE_FRAMES = 4;
 const MAX_MIXER_PACER_LAG_MS = AUDIO_CLOCK_INTERVAL_MS * 2;
 const MAX_MIXER_FRAME_AGE_MS = MAX_MIXER_QUEUE_FRAMES * AUDIO_CLOCK_INTERVAL_MS;
 const MIXER_UNDERRUN_WINDOW_MS = 200;
-// TeamSpeak and browsers can emit valid Opus comfort-noise/silence packets
-// while a client is muted. Do not turn those packets into a false "speaking"
-// indicator or forward them to TeamSpeak as if they were voice.
-const MIN_SPEAKER_RMS = 160;
-// Keep this below the speaking threshold so quiet but valid accompaniment is
-// forwarded while comfort-noise packets remain filtered.
-const MIN_FORWARD_RMS = 24;
+// This threshold is used only for the speaking indicator. It must never decide
+// whether a media packet is forwarded or queued: quiet/comfort-noise Opus
+// packets are still valid media and dropping them can break decoder continuity.
+const SPEAKER_ACTIVITY_RMS = 160;
 
 // WebRTC is served by the WebSpeak process itself. The default range is also
 // published by the bundled Docker Compose file; advanced administrators can
@@ -112,7 +109,6 @@ export class WebRtcAudioSession {
   private readonly onVoiceFrame: (data: Buffer, codec: 4 | 5) => void;
   private readonly onVoiceActivity: (clientIds: number[]) => void;
   private readonly outgoingTrack: MediaStreamTrack;
-  private ingressDecoder: { decode(data: Buffer): Buffer } | null = null;
   private readonly decoderByClient = new Map<number, { decode(data: Buffer): Buffer }>();
   private readonly partialPcmByClient = new Map<number, Buffer>();
   private readonly pendingFrames = new Map<number, PendingAudioFrame[]>();
@@ -183,22 +179,11 @@ export class WebRtcAudioSession {
         this.stats.webrtcIngressRtpFrames++;
         if (!this.opusPayloadTypes.has(rtp.header.payloadType)) return;
         const payload = Buffer.from(rtp.payload);
-        // The track is a browser-side mix of microphone and accompaniment.
-        // Accompaniment is already a complete Opus stream. Forward it as-is:
-        // do not decode it for RMS analysis or pass it through any speech
-        // gate, because either step can discard valid quiet music frames.
-        if (this.accompanimentActive) {
-          this.onVoiceFrame(payload, 5);
-          return;
-        }
-        // A normal microphone still uses the low-level comfort-noise gate.
-        const rms = this.getIngressRms(payload);
-        if (rms === null) return;
-        if (rms < MIN_FORWARD_RMS) {
-          this.stats.webrtcIngressQuietFrames++;
-          return;
-        }
-        this.onVoiceFrame(payload, 4);
+        // Forward every valid negotiated Opus payload unchanged. Do not
+        // decode it for RMS analysis or pass it through a speech/silence gate:
+        // quiet frames are still part of the codec timeline and dropping them
+        // can cause downstream gaps, clicks, or decoder recovery artifacts.
+        this.onVoiceFrame(payload, this.accompanimentActive ? 5 : 4);
       });
       void audio.sender.replaceTrack(this.outgoingTrack).catch((error: unknown) => {
         this.logger.warn({ err: error instanceof Error ? error.message : String(error) }, "Could not attach WebRTC output track");
@@ -210,16 +195,11 @@ export class WebRtcAudioSession {
 
     try {
       this.encoder = new OpusEncoder(AUDIO_SAMPLE_RATE, 1);
-      // Use a separate stateful decoder for browser ingress. RTP payloads do
-      // not identify whether a packet contains microphone energy or DTX/CN
-      // audio, so the gateway must decode it before forwarding to TS.
-      this.ingressDecoder = new OpusEncoder(AUDIO_SAMPLE_RATE, 1);
     } catch (error: unknown) {
       this.encoder = null;
-      this.ingressDecoder = null;
       this.logger.error({ err: error instanceof Error ? error.message : String(error) }, "Could not create WebRTC mixer encoder");
     }
-    if (!this.encoder || !this.ingressDecoder) {
+    if (!this.encoder) {
       this.outgoingTrack.stop();
       throw new Error("WebRTC Opus codec is unavailable");
     }
@@ -279,12 +259,10 @@ export class WebRtcAudioSession {
       const pendingPcm = this.partialPcmByClient.get(data.clientId);
       const combined = pendingPcm ? Buffer.concat([pendingPcm, pcm]) : pcm;
       const rms = this.calculateRms(pcm);
-      // A muted TeamSpeak client can still produce comfort-noise packets.
-      // Do not let those packets turn a single accompaniment stream into a
-      // synthetic multi-source mix. Music packets use codec 5 and must be
-      // retained even when their instantaneous RMS is low.
-      if (data.codec !== 5 && rms < MIN_SPEAKER_RMS) return;
-      if (rms >= MIN_SPEAKER_RMS) this.activeSpeakerIds.add(data.clientId);
+      // RMS is used only for the UI speaking indicator. Every decoded frame,
+      // including quiet/comfort-noise frames, continues into the queue so the
+      // receiver keeps an uninterrupted codec timeline.
+      if (rms >= SPEAKER_ACTIVITY_RMS) this.activeSpeakerIds.add(data.clientId);
       const canForwardOpus = !pendingPcm && pcm.length === AUDIO_FRAME_BYTES;
       let offset = 0;
       let enqueued = false;
@@ -329,7 +307,6 @@ export class WebRtcAudioSession {
     this.memberVolumes.clear();
     this.partialPcmByClient.clear();
     this.activeSpeakerIds.clear();
-    this.ingressDecoder = null;
     this.decoderByClient.clear();
     this.encoder = null;
     this.outgoingTrack.stop();
@@ -444,24 +421,6 @@ export class WebRtcAudioSession {
     const normalized = Math.max(0, Math.min(4, volume));
     if (normalized === 1) this.memberVolumes.delete(clientId);
     else this.memberVolumes.set(clientId, normalized);
-  }
-
-  private getIngressRms(data: Buffer): number | null {
-    const decoder = this.ingressDecoder;
-    if (!decoder) return null;
-    try {
-      const pcm = decoder.decode(data);
-      if (pcm.length < 2) {
-        this.stats.webrtcIngressDecodeErrors++;
-        return null;
-      }
-      return this.calculateRms(pcm);
-    } catch {
-      // Malformed/transition packets are discarded without interrupting the
-      // rest of the peer. The next valid Opus packet can recover the decoder.
-      this.stats.webrtcIngressDecodeErrors++;
-      return null;
-    }
   }
 
   private calculateRms(pcm: Buffer): number {
