@@ -73,3 +73,12 @@ test("admin host ping measures the route without opening a TeamSpeak client", as
   assert.equal(result.packetLossPercent, 25);
   assert.equal(result.latencyMs, 4);
 });
+
+test("admin host ping reports a missing runtime ping tool separately from packet loss", async () => {
+  const result = await pingTeamSpeakHost("207.57.123.189", {
+    attempts: 1,
+    execute: async () => { throw new Error("spawn ping ENOENT"); },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.errorCode, "PING_UNAVAILABLE");
+});

@@ -12,6 +12,7 @@
 - 统一中文、English、Deutsch 的旗帜代码语言菜单。
 - 修复 TeamSpeak 使用 TCP 探测导致的误报丢包，并修正语言菜单异常留白。
 - 移除 WebRTC 桥接中的 RMS 静音帧过滤，安静帧仅用于发言状态指示，不再丢弃。
+- 修复 Docker 运行环境缺少 ICMP Ping 工具导致管理员测试误报 100% 丢包。
 
 ### English
 
@@ -23,6 +24,7 @@
 - Unified the Chinese, English, and German flag/code language menu.
 - Fixed false packet-loss reports caused by probing the TeamSpeak UDP service with TCP, and corrected excess space in the language menu.
 - Removed RMS-based silence filtering from the WebRTC bridge; quiet frames are now retained for the codec timeline.
+- Fixed Docker admin diagnostics falsely reporting 100% packet loss when the runtime lacked the ICMP ping tool.
 
 ### Deutsch
 
@@ -34,6 +36,7 @@
 - Einheitliches Sprachmenü mit Flaggen und Sprachcodes für Chinesisch, Englisch und Deutsch ergänzt.
 - Falsche Paketverlustmeldungen durch TCP-Prüfung des UDP-Dienstes behoben und übermäßigen Leerraum im Sprachmenü korrigiert.
 - RMS-basierte Stillefilterung aus der WebRTC-Brücke entfernt; leise Frames bleiben nun im Codec-Zeitverlauf erhalten.
+- Falsche 100-%-Paketverlustmeldungen behoben, wenn dem Docker-Laufzeitimage das ICMP-Ping-Tool fehlte.
 
 ## [0.1.6] — 2026-09-04
 

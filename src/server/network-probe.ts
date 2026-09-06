@@ -4,6 +4,7 @@ export type TeamSpeakPingErrorCode =
   | "HOST_NOT_FOUND"
   | "UNREACHABLE"
   | "TIMEOUT"
+  | "PING_UNAVAILABLE"
   | "INVALID_PASSWORD"
   | "PROTOCOL_NEGOTIATION_FAILED"
   | "SERVER_REJECTED"
@@ -110,6 +111,7 @@ export function summarizeTeamSpeakPings(results: TeamSpeakPingAttempt[], attempt
 function classifyProbeError(error: unknown): TeamSpeakPingErrorCode {
   const text = error instanceof Error ? error.message : String(error);
   const lower = text.toLocaleLowerCase();
+  if (/enoent|spawn\s+(?:ping(?:\.exe)?|ping)\s+.*not found|command not found/.test(lower)) return "PING_UNAVAILABLE";
   if (/enotfound|eai_again|getaddrinfo|host not found|unknown host|could not find host|name or service not known/.test(lower)) return "HOST_NOT_FOUND";
   if (/timeout|timed out|packet ack timeout|idle timeout/.test(lower)) return "TIMEOUT";
   if (/password|authentication|invalid.*credential/.test(lower)) return "INVALID_PASSWORD";

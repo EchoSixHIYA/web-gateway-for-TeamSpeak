@@ -23,7 +23,7 @@ FROM node:22-bookworm-slim AS runtime
 
 WORKDIR /app
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates libstdc++6 \
+  && apt-get install -y --no-install-recommends ca-certificates libstdc++6 iputils-ping \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /data \
   && chown node:node /data
