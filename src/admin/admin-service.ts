@@ -7,7 +7,7 @@ import { type AccessMode, type ManagedInviteRecord, type SettingsUpdate, WebSpea
 import { hashAdminPassword, validateAdminPassword, verifyAdminPassword } from "../security/admin-password.js";
 import { decryptSecret, encryptSecret } from "../security/secret-crypto.js";
 import { probeTeamSpeak, TeamSpeakProbeError } from "../server/teamspeak-probe.js";
-import { pingTeamSpeak } from "../server/network-probe.js";
+import { collectTeamSpeakPings, type TeamSpeakPingAttempt } from "../server/network-probe.js";
 import type { WebRtcAudioOptions } from "../server/webrtc-audio.js";
 import { DEFAULT_WEBRTC_UDP_PORT_RANGE, WEBRTC_UDP_PORT_MAX, WEBRTC_UDP_PORT_MIN } from "../server/webrtc-config.js";
 
@@ -164,16 +164,30 @@ export class AdminService {
       throw new AdminInputError("INVALID_TARGET", "TeamSpeak target is invalid");
     }
     try {
-      // The admin connection test is a reachability check. A TCP endpoint
-      // probe avoids creating a temporary TeamSpeak client and lets the UI
-      // report packet loss. Keep the injected TeamSpeak probe for tests and
-      // compatibility with callers that explicitly need protocol discovery.
+      // The admin connection test uses the real TeamSpeak client protocol.
+      // A raw TCP connect is not valid here because TeamSpeak voice/client
+      // traffic is UDP; it would report 100% loss while normal voice works.
+      // Keep the injected probe for tests and compatibility with callers that
+      // explicitly need protocol discovery.
       if (this.probe === probeTeamSpeak) {
-        const result = await pingTeamSpeak(target, { attempts: 4 });
+        let lastServerName: string | null = null;
+        const result = await collectTeamSpeakPings(async (): Promise<TeamSpeakPingAttempt> => {
+          try {
+            const probe = await this.probe(target, password, this.logger);
+            lastServerName = probe.serverName;
+            return { ok: true, latencyMs: probe.latencyMs };
+          } catch (error: unknown) {
+            return {
+              ok: false,
+              latencyMs: null,
+              errorCode: error instanceof TeamSpeakProbeError ? error.code : "INTERNAL_ERROR",
+            };
+          }
+        }, { attempts: 4 });
         const publicResult = {
           ok: result.ok,
           latencyMs: result.latencyMs ?? 0,
-          serverName: null,
+          serverName: lastServerName,
           requiresPassword: Boolean(password),
           packetLossPercent: result.packetLossPercent,
           attempts: result.attempts,

@@ -13,7 +13,7 @@ import { SessionManager, type ManagedSession, type SessionTeardownReason } from 
 import { parseClientCommand, type ClientCommand } from "./voice-protocol.js";
 import { isRecoverable, reconnectDelayMs, reconnectWindowOpen } from "./reconnect-policy.js";
 import { WebRtcAudioSession, type WebRtcAudioOptions, type WebRtcAudioStats, type WebRtcSessionDescription } from "./webrtc-audio.js";
-import { pingTeamSpeakPort } from "./network-probe.js";
+import { pingTeamSpeakSession } from "./network-probe.js";
 
 const require = createRequire(import.meta.url);
 const { OpusEncoder } = require("@discordjs/opus") as {
@@ -873,7 +873,9 @@ async function handleCommand(
     const now = Date.now();
     if (now - entry.lastLatencyProbeAt < 150) return;
     entry.lastLatencyProbeAt = now;
-    const result = await pingTeamSpeakPort(entry.target);
+    const result = await pingTeamSpeakSession(
+      (request, timeoutMs) => entry.tsClient.execCommandWithResponse(request, timeoutMs),
+    );
     sendJson({
       type: "latencyPong",
       sequence,

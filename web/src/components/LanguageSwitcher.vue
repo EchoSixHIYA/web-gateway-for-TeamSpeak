@@ -153,9 +153,15 @@ onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerD
   right: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(38px, max-content);
+  align-items: start;
+  align-content: start;
   gap: 3px;
   width: 218px;
+  height: auto;
+  max-height: none;
   padding: 7px;
+  overflow: visible;
   background: #fff;
   border: 1px solid #dce9e5;
   border-radius: 13px;
@@ -166,6 +172,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerD
 .language-option {
   display: flex;
   align-items: center;
+  align-self: start;
   min-width: 0;
   gap: 8px;
   min-height: 38px;

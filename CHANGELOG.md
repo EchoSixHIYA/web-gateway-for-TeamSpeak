@@ -10,6 +10,7 @@
 - 增加可展开的网络性能面板，显示浏览器、WebSpeak 与 TeamSpeak 之间的延迟和丢包率。
 - 管理员连接测试改用多次网络探测并显示丢包率。
 - 统一中文、English、Deutsch 的旗帜代码语言菜单。
+- 修复 TeamSpeak 使用 TCP 探测导致的误报丢包，并修正语言菜单异常留白。
 
 ### English
 
@@ -19,6 +20,7 @@
 - Added an expandable network performance panel with latency and packet loss across the browser, WebSpeak, and TeamSpeak path.
 - Updated the administrator connection test to use repeated reachability probes and report packet loss.
 - Unified the Chinese, English, and German flag/code language menu.
+- Fixed false packet-loss reports caused by probing the TeamSpeak UDP service with TCP, and corrected excess space in the language menu.
 
 ### Deutsch
 
@@ -28,6 +30,7 @@
 - Aufklappbares Netzwerkleistungsfeld mit Latenz und Paketverlust zwischen Browser, WebSpeak und TeamSpeak ergänzt.
 - Verbindungstest in der Administration auf wiederholte Erreichbarkeitsprüfungen mit Paketverlustanzeige umgestellt.
 - Einheitliches Sprachmenü mit Flaggen und Sprachcodes für Chinesisch, Englisch und Deutsch ergänzt.
+- Falsche Paketverlustmeldungen durch TCP-Prüfung des UDP-Dienstes behoben und übermäßigen Leerraum im Sprachmenü korrigiert.
 
 ## [0.1.6] — 2026-09-04
 
