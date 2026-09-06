@@ -37,18 +37,21 @@
 - [在线 Demo · Live Demo](#demo)
 - [社区 · Community](#community)
 - [简体中文](#简体中文)
+  - [界面截图](#zh-screenshots)
   - [特性](#zh-features)
   - [更新日志](#zh-changelog)
   - [部署方案](#zh-deployment)
   - [要求和注意事项](#zh-requirements)
   - [许可证](#zh-license)
 - [English](#english)
+  - [Screenshots](#en-screenshots)
   - [Features](#en-features)
   - [Changelog](#en-changelog)
   - [Deployment](#en-deployment)
   - [Requirements and notes](#en-requirements)
   - [License](#en-license)
 - [Deutsch](#deutsch)
+  - [Screenshots](#de-screenshots)
   - [Funktionen](#de-features)
   - [Änderungsprotokoll](#de-changelog)
   - [Bereitstellung](#de-deployment)
@@ -106,6 +109,16 @@ Telegram: [Join the Telegram group](https://t.me/+8qShpTcuN9A3MWY9)
 ## 简体中文
 
 WebSpeak 面向希望通过网页提供 TeamSpeak 语音服务的个人、社区和服务器管理员。它提供完整的访客页面、语音工作区和管理控制台，并可使用 Docker、预编译包或源码部署。
+
+<a id="zh-screenshots"></a>
+
+### 🖼️ 界面截图
+
+以下截图来自上海测试节点，展示中文界面下的实际语音工作区。
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-zh.png" alt="WebSpeak 中文界面" width="100%" />
+</p>
 
 <a id="zh-features"></a>
 
@@ -245,6 +258,16 @@ WebSpeak 使用 [GNU Affero General Public License v3.0 only](./LICENSE) 发布�
 
 WebSpeak is built for individuals, communities, and server operators who want to offer TeamSpeak voice access through the web. It includes a complete visitor page, voice workspace, and administration console, with Docker, prebuilt-package, and source deployment options.
 
+<a id="en-screenshots"></a>
+
+### 🖼️ Screenshots
+
+These screenshots come from the Shanghai test node and show the live voice workspace in English.
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-en.png" alt="WebSpeak English interface" width="100%" />
+</p>
+
 <a id="en-features"></a>
 
 ### ✨ Features
@@ -382,6 +405,16 @@ WebSpeak is released under the [GNU Affero General Public License v3.0 only](./L
 ## Deutsch
 
 WebSpeak ist ein selbst gehosteter TeamSpeak-3-/TeamSpeak-6-Webclient und ein Sprach-Gateway. Nutzer können direkt im Browser Kanälen beitreten, sprechen und chatten; Administratoren verwalten Zielserver und Zugriff über die Webkonsole.
+
+<a id="de-screenshots"></a>
+
+### 🖼️ Screenshots
+
+Diese Screenshots stammen vom Shanghai-Testknoten und zeigen den Sprachbereich mit deutscher Benutzeroberfläche.
+
+<p align="center">
+  <img src="./docs/screenshots/webspeak-de.png" alt="WebSpeak deutsche Oberfläche" width="100%" />
+</p>
 
 <a id="de-features"></a>
 
