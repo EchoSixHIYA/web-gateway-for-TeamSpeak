@@ -247,6 +247,23 @@
       <button type="button" @click="copyMemberName(memberMenu.member); memberMenu = null"><Icon name="copy" :size="15" /> {{ t('copyNickname') }}</button>
     </div>
 
+    <!-- Protected channel password modal -->
+    <div v-if="channelPasswordDialog.open" class="modal-backdrop channel-password-backdrop" @click.self="cancelChannelPassword">
+      <section class="channel-password-modal" role="dialog" aria-modal="true" :aria-labelledby="'channel-password-title'" @click.stop>
+        <button type="button" class="qq-modal-close" :aria-label="t('close')" :title="t('close')" @click="cancelChannelPassword"><Icon name="close" :size="19" /></button>
+        <div class="channel-password-icon"><Icon name="lock" :size="22" /></div>
+        <span class="card-kicker">{{ t('channelPasswordPrompt') }}</span>
+        <h2 id="channel-password-title">{{ t('channelPasswordTitle') }}</h2>
+        <p>{{ t('channelPasswordLead') }}</p>
+        <form class="channel-password-form" @submit.prevent="submitChannelPassword">
+          <label class="field-label" for="channel-password-input">{{ t('channelPasswordPrompt') }}</label>
+          <div class="field-wrap"><Icon name="lock" :size="17" /><input id="channel-password-input" v-model="channelPasswordDialog.password" type="password" autocomplete="current-password" :placeholder="t('channelPasswordPlaceholder')" :disabled="channelPasswordDialog.submitting" autofocus /></div>
+          <div v-if="channelPasswordDialog.error" class="notice error-notice channel-password-error"><span class="notice-symbol">!</span><span>{{ channelPasswordDialog.error }}</span></div>
+          <div class="channel-password-actions"><button type="button" class="text-button" :disabled="channelPasswordDialog.submitting" @click="cancelChannelPassword">{{ t('channelPasswordCancel') }}</button><button type="submit" class="primary-button channel-password-submit" :disabled="channelPasswordDialog.submitting || !channelPasswordDialog.password"><span v-if="channelPasswordDialog.submitting" class="button-spinner"></span><span>{{ t('channelPasswordSubmit') }}</span><Icon v-if="!channelPasswordDialog.submitting" name="chevron-right" :size="17" /></button></div>
+        </form>
+      </section>
+    </div>
+
     <!-- Audio settings modal -->
     <div v-if="settingsOpen" class="modal-backdrop" @click.self="settingsOpen = false">
       <section class="settings-modal" role="dialog" aria-modal="true" :aria-labelledby="'settings-title'">
@@ -262,7 +279,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import Icon from "../components/Icon.vue";
 import { useVoiceWebSocket, type ChannelInfo, type ChannelMember } from "../composables/useVoiceWebSocket.js";
 import { clearLocalData as clearStoredLocalData, isLocalPersistenceAvailable, listFavorites, listRecentServers, loadLocalPreferences, loadStoredIdentity, recordRecentServer, removeFavorite, removeStoredIdentity, saveFavorite, saveLocalPreferences, saveStoredIdentity, type FavoriteServer, type RecentServer } from "../services/local-persistence.js";
@@ -357,6 +374,7 @@ const memberQuery = ref("");
 const messageDraft = ref("");
 const selectedChannelId = ref("");
 const settingsOpen = ref(false);
+const channelPasswordDialog = reactive({ open: false, channelId: "", password: "", error: "", submitting: false });
 const qqModalOpen = ref(false);
 const qqJoinUrl = "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=yhumUMDD9PmyYFWdXWUb_x7hM5trFQY8&authKey=Pw3HBGT7GwMinTQnuFGfnpf0aRSzXOJKcAiujVP1%2BXMpjheAKrncTRivicBJxpjV&noverify=0&group_code=869500475";
 const audioSettingsError = ref("");
@@ -511,6 +529,12 @@ const translations: Record<string, Record<string, string>> = {
     privateMessagePlaceholder: "发送私聊消息…",
     serverMessagePlaceholder: "发送服务器消息…",
     channelPasswordPrompt: "请输入频道密码",
+    channelPasswordTitle: "进入加密频道",
+    channelPasswordLead: "该频道需要密码才能进入。",
+    channelPasswordPlaceholder: "输入频道密码",
+    channelPasswordSubmit: "进入频道",
+    channelPasswordCancel: "取消",
+    channelPasswordRetry: "密码不正确，请重试。",
     privateChatStart: "这是私聊的开始",
     privateChatStartLead: "发送一条私聊消息。",
     eventLog: "事件日志",
@@ -747,6 +771,12 @@ const translations: Record<string, Record<string, string>> = {
     privateMessagePlaceholder: "Message privately…",
     serverMessagePlaceholder: "Message the server…",
     channelPasswordPrompt: "Enter the channel password",
+    channelPasswordTitle: "Enter protected channel",
+    channelPasswordLead: "This channel requires a password to join.",
+    channelPasswordPlaceholder: "Channel password",
+    channelPasswordSubmit: "Enter channel",
+    channelPasswordCancel: "Cancel",
+    channelPasswordRetry: "That password was not accepted. Try again.",
     privateChatStart: "This is the beginning of the private chat",
     privateChatStartLead: "Send a private message.",
     eventLog: "Event log",
@@ -986,6 +1016,12 @@ translations.de = {
   privateMessagePlaceholder: "Private Nachricht senden…",
   serverMessagePlaceholder: "Nachricht an den Server senden…",
   channelPasswordPrompt: "Kanalpasswort eingeben",
+  channelPasswordTitle: "Geschützten Kanal betreten",
+  channelPasswordLead: "Für diesen Kanal ist ein Passwort erforderlich.",
+  channelPasswordPlaceholder: "Kanalpasswort",
+  channelPasswordSubmit: "Kanal betreten",
+  channelPasswordCancel: "Abbrechen",
+  channelPasswordRetry: "Das Passwort wurde abgelehnt. Bitte erneut versuchen.",
   privateChatStart: "Dies ist der Anfang des privaten Chats",
   privateChatStartLead: "Sende eine private Nachricht.",
   eventLog: "Ereignisprotokoll",
@@ -1266,8 +1302,21 @@ watch(() => chatMessages.length, (length, previousLength) => {
 });
 watch(() => voiceState.errorCode, (code) => {
   if (code !== "CHANNEL_PASSWORD_REQUIRED" || !selectedChannelId.value) return;
-  const password = window.prompt(t("channelPasswordPrompt"), "");
-  if (password !== null) switchChannel(selectedChannelId.value, password);
+  channelPasswordDialog.open = true;
+  channelPasswordDialog.channelId = selectedChannelId.value;
+  channelPasswordDialog.password = "";
+  channelPasswordDialog.error = t("channelPasswordRetry");
+  channelPasswordDialog.submitting = false;
+  clearError();
+  void nextTick(() => document.getElementById("channel-password-input")?.focus());
+});
+watch(() => voiceState.channelSwitchedChannelId, (channelId) => {
+  if (!channelPasswordDialog.open || !channelId || channelId !== channelPasswordDialog.channelId) return;
+  channelPasswordDialog.open = false;
+  channelPasswordDialog.channelId = "";
+  channelPasswordDialog.password = "";
+  channelPasswordDialog.error = "";
+  channelPasswordDialog.submitting = false;
 });
 watch(() => pokeNotifications.length, (length, previousLength) => {
   const latest = pokeNotifications[length - 1];
@@ -1388,6 +1437,24 @@ function selectChannel(item: TreeChannel) {
   channel.value = item.name;
   chatTab.value = "channel";
   switchChannel(item.id);
+}
+
+function submitChannelPassword() {
+  if (!channelPasswordDialog.open || !channelPasswordDialog.channelId || !channelPasswordDialog.password) return;
+  channelPasswordDialog.error = "";
+  channelPasswordDialog.submitting = true;
+  switchChannel(channelPasswordDialog.channelId, channelPasswordDialog.password);
+}
+
+function cancelChannelPassword() {
+  const ownChannel = channelTree.value.find((item) => item.members.some((member) => member.id === voiceState.tsClientId));
+  if (ownChannel) selectedChannelId.value = ownChannel.id;
+  channelPasswordDialog.open = false;
+  channelPasswordDialog.channelId = "";
+  channelPasswordDialog.password = "";
+  channelPasswordDialog.error = "";
+  channelPasswordDialog.submitting = false;
+  clearError();
 }
 
 function selectChannelById() {
@@ -1813,6 +1880,29 @@ function stopWhisperTalk(): void {
 .member-panel { min-width: 0; padding: 26px 16px; color: #2c3935; background: #fbfcfc; border-left: 1px solid #eef2f0; }.member-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; }.member-panel-heading h2 { margin: 5px 0 0; color: #25322e; font-size: 19px; letter-spacing: -.04em; }.member-search { margin-top: 18px; padding: 0 10px; min-height: 33px; }.member-group { margin-top: 24px; }.member-group-title { display: flex; align-items: center; gap: 8px; color: #85928e; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }.group-line { height: 1px; flex: 1; background: #e6edeb; }.member-list { display: flex; flex-direction: column; gap: 17px; margin-top: 17px; }.member-row { display: flex; align-items: center; gap: 8px; min-width: 0; }.member-avatar { position: relative; display: grid; place-items: center; width: 33px; height: 33px; flex: 0 0 auto; color: #fff; border-radius: 10px; font-size: 10px; font-weight: 700; }.member-avatar.speaking { box-shadow: 0 0 0 2px #90f691, 0 0 10px rgba(144,246,145,.35); }.member-presence { position: absolute; right: -2px; bottom: -2px; width: 9px; height: 9px; border: 2px solid #fbfcfc; border-radius: 50%; background: #65d879; }.member-copy { min-width: 0; flex: 1; }.member-copy strong, .member-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.member-copy strong { color: #34423d; font-size: 10px; }.member-copy span { margin-top: 4px; color: #96a29e; font-size: 9px; }.member-volume { display: flex; align-items: center; gap: 5px; color: #a1afaa; width: 64px; }.member-volume input { width: 45px; height: 4px; appearance: none; border-radius: 99px; outline: none; cursor: pointer; }.member-volume input::-webkit-slider-thumb, .settings-range::-webkit-slider-thumb { width: 14px; height: 14px; appearance: none; border: 2px solid #81d8d0; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.12); cursor: pointer; }.member-volume input::-moz-range-thumb, .settings-range::-moz-range-thumb { width: 14px; height: 14px; border: 2px solid #81d8d0; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.12); cursor: pointer; }.member-empty { margin-top: 22px; color: #98a49f; font-size: 10px; text-align: center; }.member-panel-tip { display: flex; gap: 8px; margin-top: 36px; padding: 12px; color: #72827c; background: #eef5f2; border-radius: 9px; font-size: 9px; line-height: 1.5; }.member-panel-tip .ui-icon { color: #5e9e96; }
 
 .modal-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 28px; background: rgba(25, 33, 31, .42); backdrop-filter: blur(5px); }.settings-modal { display: flex; width: min(920px, 100%); max-height: min(760px, calc(100dvh - 56px)); overflow: hidden; border-radius: 16px; background: #fff; box-shadow: 0 20px 60px rgba(16,40,35,.2); }.settings-nav { display: flex; flex-direction: column; width: 215px; flex: 0 0 auto; padding: 28px 12px 20px; background: #f8faf9; border-right: 1px solid #e6ecea; }.settings-title { padding: 0 13px 20px; color: #25322e; font-size: 19px; font-weight: 700; }.settings-nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 13px; color: #65736f; background: transparent; border-left: 3px solid transparent; border-radius: 8px; font-size: 11px; text-align: left; cursor: pointer; }.settings-nav-item.active { color: #006a64; background: #e2efec; border-left-color: #006a64; font-weight: 700; }.settings-version { margin-top: auto; padding: 20px 13px 0; color: #98a5a0; border-top: 1px solid #e4ebe8; font-size: 10px; line-height: 1.7; }.settings-version span { color: #b0bbb7; }.settings-main { display: flex; min-width: 0; flex: 1; flex-direction: column; }.settings-header { display: flex; align-items: center; justify-content: space-between; min-height: 75px; padding: 0 28px; border-bottom: 1px solid #edf1ef; }.settings-header h2 { margin: 0; color: #202c29; font-size: 22px; letter-spacing: -.045em; }.settings-content { flex: 1; overflow-y: auto; padding: 28px 40px; }.settings-section { max-width: 620px; margin: 0 auto; }.settings-section h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 21px; color: #293631; font-size: 16px; }.settings-section h3 .ui-icon { color: #006a64; }.settings-label { display: block; margin-bottom: 8px; color: #5e6d67; font-size: 10px; font-weight: 500; }.select-like { display: flex; align-items: center; justify-content: space-between; min-height: 39px; margin-bottom: 19px; padding: 0 13px; color: #394742; background: #f4f7f6; border-radius: 8px; font-size: 11px; }.select-like .ui-icon { color: #677671; }.settings-range-row { display: flex; align-items: center; justify-content: space-between; }.settings-range-row .settings-label { margin: 0; }.settings-range-row strong { color: #006a64; font-size: 10px; }.settings-range { width: 100%; height: 6px; margin: 11px 0 20px; appearance: none; border-radius: 999px; outline: none; cursor: pointer; }.settings-range::-webkit-slider-thumb { width: 19px; height: 19px; }.settings-range::-moz-range-thumb { width: 19px; height: 19px; }.mic-test { padding: 15px; border: 1px solid #e5ece9; border-radius: 11px; background: #fafcfb; }.mic-test-header { display: flex; align-items: center; justify-content: space-between; }.mic-test-header strong { color: #36453f; font-size: 11px; }.mic-test-header button { padding: 6px 9px; color: #006a64; background: #e0f1ee; border-radius: 5px; font-size: 10px; cursor: pointer; }.meter { display: flex; align-items: flex-end; justify-content: space-between; gap: 4px; height: 39px; margin-top: 12px; padding: 0 4px 4px; border-bottom: 1px solid #dce6e2; }.meter i { width: 5px; min-height: 4px; border-radius: 3px 3px 0 0; background: #dfe6e3; }.meter i.active { background: #81ed8b; box-shadow: 0 0 7px rgba(129,237,139,.45); animation: meter 1s ease-in-out infinite alternate; }.meter-labels { display: flex; justify-content: space-between; margin-top: 6px; color: #9ba6a2; font-size: 8px; }.settings-separator { max-width: 620px; margin: 32px auto; border-top: 1px solid #edf1ef; }.mode-note { display: flex; align-items: flex-start; gap: 8px; padding: 12px; color: #66817a; background: #eef7f4; border-radius: 8px; font-size: 10px; line-height: 1.5; }.mode-note .ui-icon { color: #4f9c91; }.settings-footer { display: flex; justify-content: flex-end; gap: 16px; min-height: 67px; padding: 15px 28px; border-top: 1px solid #edf1ef; }.text-button { padding: 0 6px; color: #63716c; background: transparent; font-size: 11px; font-weight: 600; cursor: pointer; }.save-button { padding: 0 23px; }.qq-modal-card { position: relative; width: min(460px, 100%); max-height: min(90dvh, 720px); overflow-y: auto; padding: 30px; color: #263431; border: 1px solid #d9e7e3; border-radius: 20px; background: #fff; box-shadow: 0 20px 60px rgba(16,40,35,.22); text-align: center; }.qq-modal-heading { padding: 0 24px 18px; }.qq-modal-heading h2 { margin: 8px 0 0; color: #1d2d29; font-size: 25px; letter-spacing: -.04em; }.qq-modal-close { position: absolute; top: 13px; right: 13px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: #6d7d78; background: #f1f6f4; border: 1px solid #e1ebe8; border-radius: 50%; cursor: pointer; }.qq-modal-close:hover { color: #006a64; background: #e2f2ef; border-color: #c8e6e1; }.qq-qr-image { display: block; width: min(100%, 360px); max-height: min(55vh, 520px); margin: 0 auto; object-fit: contain; border-radius: 12px; }.qq-direct-join { margin: 18px 0 9px; color: #667773; font-size: 13px; }.qq-join-link { display: block; padding: 11px 14px; color: #006a64; background: #edf8f5; border: 1px solid #cfe9e4; border-radius: 10px; font-size: 12px; font-weight: 700; line-height: 1.45; text-decoration: none; overflow-wrap: anywhere; }.qq-join-link:hover { color: #fff; background: #006a64; border-color: #006a64; }.toast { position: fixed; z-index: 30; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 8px; padding: 11px 15px; color: #fff; background: #263e39; border-radius: 9px; box-shadow: 0 10px 24px rgba(16,48,42,.2); font-size: 11px; animation: toast-in .25s ease-out; }
+
+.channel-password-modal { position: relative; width: min(420px, 100%); padding: 31px 32px 28px; color: #263431; border: 1px solid #d9e7e3; border-radius: 18px; background: #fff; box-shadow: 0 20px 60px rgba(16,40,35,.22); }
+.channel-password-icon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 17px; color: #006a64; background: #e4f4f0; border-radius: 14px; }
+.channel-password-modal h2 { margin: 7px 0 8px; color: #1d2d29; font-size: 24px; letter-spacing: -.04em; }
+.channel-password-modal > p { margin: 0 0 23px; color: #70817b; font-size: 12px; line-height: 1.6; }
+.channel-password-form .field-label { margin-bottom: 8px; }
+.channel-password-form .field-wrap { margin-bottom: 12px; }
+.channel-password-error { margin: 0 0 14px; }
+.channel-password-actions { display: flex; align-items: center; justify-content: flex-end; gap: 15px; margin-top: 21px; }
+.channel-password-submit { min-height: 40px; padding: 0 16px; }
+.channel-password-submit .button-spinner { width: 14px; height: 14px; }
+.channel-password-submit:disabled { cursor: wait; opacity: .7; }
+
+@media (max-width: 740px) {
+  .channel-password-backdrop { align-items: flex-end; padding: 0; }
+  .channel-password-modal { width: 100%; padding: 27px 22px calc(23px + env(safe-area-inset-bottom, 0px)); border-radius: 20px 20px 0 0; }
+  .channel-password-modal h2 { font-size: 22px; }
+}
+
+:global(html[data-theme="dark"] .channel-password-modal) { color: var(--text-primary); border-color: var(--border); background: var(--surface-1); box-shadow: 0 20px 60px color-mix(in srgb, var(--text-primary) 18%, transparent); }
+:global(html[data-theme="dark"] .channel-password-modal h2) { color: var(--text-primary); }
+:global(html[data-theme="dark"] .channel-password-modal > p) { color: var(--text-muted); }
+:global(html[data-theme="dark"] .channel-password-icon) { color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, var(--surface-2)); }
 
 @keyframes spin { to { transform: rotate(360deg); } } @keyframes wave { from { transform: scaleY(.68); opacity: .65; } to { transform: scaleY(1.08); opacity: 1; } } @keyframes meter { from { transform: scaleY(.65); } to { transform: scaleY(1); } } @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 

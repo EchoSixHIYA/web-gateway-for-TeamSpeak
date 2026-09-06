@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
-    "@echosixhiya/teamspeak-client": "git+https://github.com/EchoSixHIYA/teamspeak-js.git#4e9edf7",
+    "@echosixhiya/teamspeak-client": "git+https://github.com/EchoSixHIYA/teamspeak-js.git#8d91c30",
     "express": "^5.2.1",
     "pino": "^10.3.1",
     "werift": "0.24.4",

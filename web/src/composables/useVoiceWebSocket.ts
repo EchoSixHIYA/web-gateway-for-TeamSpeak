@@ -12,6 +12,7 @@ export interface VoiceState {
   tsClientId: number;
   error: string;
   errorCode: string;
+  channelSwitchedChannelId: string;
 }
 
 export interface ChannelMember {
@@ -78,7 +79,7 @@ export interface ServerEvent {
 
 export function useVoiceWebSocket() {
   const ws = ref<WebSocket | null>(null);
-  const state = reactive<VoiceState>({ connected: false, connecting: false, reconnecting: false, reconnectAttempt: 0, reconnectFailed: false, tsClientId: 0, error: "", errorCode: "" });
+  const state = reactive<VoiceState>({ connected: false, connecting: false, reconnecting: false, reconnectAttempt: 0, reconnectFailed: false, tsClientId: 0, error: "", errorCode: "", channelSwitchedChannelId: "" });
   const members = reactive<ChannelMember[]>([]);
   const channels = reactive<ChannelInfo[]>([]);
   const chatMessages = reactive<ChatMessage[]>([]);
@@ -117,7 +118,6 @@ export function useVoiceWebSocket() {
   let webrtcMixMicSource: MediaStreamAudioSourceNode | null = null;
   let webrtcMixMicGain: GainNode | null = null;
   let webrtcMixAccompanimentSource: MediaStreamAudioSourceNode | null = null;
-  let webrtcMixAccompanimentGain: GainNode | null = null;
   let webrtcMicMonitorSource: MediaStreamAudioSourceNode | null = null;
   let webrtcMicMonitorAnalyser: AnalyserNode | null = null;
   let webrtcMicMonitorGain: GainNode | null = null;
@@ -486,12 +486,10 @@ export function useVoiceWebSocket() {
 
   function stopWebRtcMix(): void {
     webrtcMixAccompanimentSource?.disconnect();
-    webrtcMixAccompanimentGain?.disconnect();
     webrtcMixMicSource?.disconnect();
     webrtcMixMicGain?.disconnect();
     webrtcMixDestination?.disconnect();
     webrtcMixAccompanimentSource = null;
-    webrtcMixAccompanimentGain = null;
     webrtcMixMicSource = null;
     webrtcMixMicGain = null;
     webrtcMixDestination = null;
@@ -523,12 +521,11 @@ export function useVoiceWebSocket() {
     const accompanimentTrack = accompanimentStream?.getAudioTracks()[0];
     if (accompanimentTrack) {
       const accompanimentSource = ctx.createMediaStreamSource(accompanimentStream!);
-      const accompanimentGain = ctx.createGain();
-      accompanimentGain.gain.value = 0.78;
-      accompanimentSource.connect(accompanimentGain);
-      accompanimentGain.connect(destination);
+      // Keep the captured application audio at its source level. Do not add
+      // a fixed attenuation/gain node: it makes music sound quieter than the
+      // source and encourages later "compensation" steps to pump its volume.
+      accompanimentSource.connect(destination);
       webrtcMixAccompanimentSource = accompanimentSource;
-      webrtcMixAccompanimentGain = accompanimentGain;
     }
     return destination.stream;
   }
@@ -554,7 +551,16 @@ export function useVoiceWebSocket() {
       throw new Error("伴奏功能需要启用 WebRTC");
     }
 
-    const audioConstraints = {} as MediaTrackConstraints & { restrictOwnAudio?: boolean };
+    const captureProcessingConstraints: MediaTrackConstraints = {
+      // Display/application audio must not pass through browser voice
+      // processing. Those processors are designed for speech and can change
+      // music level from frame to frame (AGC), suppress quiet passages, or
+      // cancel sustained tones.
+      autoGainControl: false,
+      echoCancellation: false,
+      noiseSuppression: false,
+    };
+    const audioConstraints = { ...captureProcessingConstraints } as MediaTrackConstraints & { restrictOwnAudio?: boolean };
     const supportedConstraints = navigator.mediaDevices.getSupportedConstraints?.() as Record<string, boolean> | undefined;
     if (supportedConstraints?.restrictOwnAudio) audioConstraints.restrictOwnAudio = true;
     const options = {
@@ -580,6 +586,18 @@ export function useVoiceWebSocket() {
       accompanimentErrorCode.value = "noAudio";
       throw new Error("所选来源没有可共享音频");
     }
+
+    try {
+      // Do not pass the Chromium-only restrictOwnAudio hint to
+      // applyConstraints: rejecting an unknown key could otherwise cause the
+      // browser to discard all three standard processing-off constraints.
+      await audioTrack.applyConstraints(captureProcessingConstraints);
+    } catch {
+      // Some browsers expose display audio but reject one or more optional
+      // processing constraints. The capture can still proceed without
+      // introducing a WebSpeak-side gain stage.
+    }
+    if ("contentHint" in audioTrack) audioTrack.contentHint = "music";
 
     accompanimentStream?.getTracks().forEach((track) => track.stop());
     accompanimentStream = nextStream;
@@ -1158,6 +1176,7 @@ export function useVoiceWebSocket() {
     state.reconnectFailed = false;
     state.tsClientId = 0;
     state.errorCode = "";
+    state.channelSwitchedChannelId = "";
     if (!keepRememberedIdentity) identityMaterial.value = "";
     members.length = 0;
     channels.length = 0;
@@ -1185,6 +1204,7 @@ export function useVoiceWebSocket() {
         state.reconnectFailed = false;
         state.error = "";
         state.errorCode = "";
+        state.channelSwitchedChannelId = "";
         state.tsClientId = Number(msg.tsClientId) || 0;
         applyWhisperState(msg.whisperTargetIds, msg.whisperActive);
         if (Array.isArray(msg.members)) {
@@ -1271,6 +1291,9 @@ export function useVoiceWebSocket() {
         });
         break;
       case "channelSwitched":
+        state.channelSwitchedChannelId = typeof msg.channelId === "string" || typeof msg.channelId === "number" ? String(msg.channelId) : "";
+        state.error = "";
+        state.errorCode = "";
         break;
       case "disconnected":
         state.connected = false;
@@ -1349,6 +1372,7 @@ export function useVoiceWebSocket() {
   function switchChannel(channelId: string, password = ""): void {
     state.error = "";
     state.errorCode = "";
+    state.channelSwitchedChannelId = "";
     sendCmd("switchChannel", { channelId, ...(password ? { password } : {}) });
   }
 

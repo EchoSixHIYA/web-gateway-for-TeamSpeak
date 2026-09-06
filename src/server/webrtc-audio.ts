@@ -184,17 +184,21 @@ export class WebRtcAudioSession {
         if (!this.opusPayloadTypes.has(rtp.header.payloadType)) return;
         const payload = Buffer.from(rtp.payload);
         // The track is a browser-side mix of microphone and accompaniment.
-        // Decode it once to reject malformed RTP. A normal microphone still
-        // uses the low-level comfort-noise gate, while accompaniment must not
-        // be treated as speech: quiet music frames are valid audio and are
-        // forwarded with TeamSpeak's music codec marker.
+        // Accompaniment is already a complete Opus stream. Forward it as-is:
+        // do not decode it for RMS analysis or pass it through any speech
+        // gate, because either step can discard valid quiet music frames.
+        if (this.accompanimentActive) {
+          this.onVoiceFrame(payload, 5);
+          return;
+        }
+        // A normal microphone still uses the low-level comfort-noise gate.
         const rms = this.getIngressRms(payload);
         if (rms === null) return;
-        if (!this.accompanimentActive && rms < MIN_FORWARD_RMS) {
+        if (rms < MIN_FORWARD_RMS) {
           this.stats.webrtcIngressQuietFrames++;
           return;
         }
-        this.onVoiceFrame(payload, this.accompanimentActive ? 5 : 4);
+        this.onVoiceFrame(payload, 4);
       });
       void audio.sender.replaceTrack(this.outgoingTrack).catch((error: unknown) => {
         this.logger.warn({ err: error instanceof Error ? error.message : String(error) }, "Could not attach WebRTC output track");
