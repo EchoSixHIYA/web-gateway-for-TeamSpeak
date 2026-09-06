@@ -2105,8 +2105,10 @@ function stopWhisperTalk(): void {
 .desktop-audio-dock-copy strong { overflow: hidden; color: var(--text-primary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .desktop-audio-dock-copy span { overflow: hidden; font-size: 10px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .desktop-audio-dock-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
-.dock-output-control { display: flex; align-items: center; gap: 5px; }
-.dock-output-slider { width: 76px; height: 5px; appearance: none; border-radius: 999px; outline: none; cursor: pointer; }
+.dock-output-control { display: flex; align-items: center; gap: 5px; width: 34px; overflow: hidden; transition: width .18s ease; }
+.dock-output-control:hover, .dock-output-control:focus-within { width: 115px; }
+.dock-output-slider { width: 0; min-width: 0; height: 5px; opacity: 0; appearance: none; border-radius: 999px; outline: none; pointer-events: none; cursor: pointer; transition: width .18s ease, opacity .14s ease; }
+.dock-output-control:hover .dock-output-slider, .dock-output-control:focus-within .dock-output-slider { width: 76px; opacity: 1; pointer-events: auto; }
 .dock-output-slider::-webkit-slider-thumb { width: 14px; height: 14px; appearance: none; border: 2px solid #81d8d0; border-radius: 50%; background: var(--surface-1); cursor: pointer; }
 .dock-output-slider::-moz-range-thumb { width: 14px; height: 14px; border: 2px solid #81d8d0; border-radius: 50%; background: var(--surface-1); cursor: pointer; }
 .dock-audio-button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 9px; cursor: pointer; transition: color .16s, background .16s, border-color .16s, transform .16s; }
