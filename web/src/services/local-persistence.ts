@@ -35,7 +35,7 @@ export interface LocalPreferences {
   theme?: "system" | "light" | "dark";
   microphoneMuted?: boolean;
   voxThreshold?: number;
-  language?: "zh" | "en";
+  language?: "zh" | "en" | "de";
   preferredInputDeviceId?: string;
   preferredOutputDeviceId?: string;
   inputGain?: number;

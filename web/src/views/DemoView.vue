@@ -2,7 +2,7 @@
   <div class="demo-page">
     <header class="demo-header">
       <div class="demo-brand"><span><Icon name="waveform" :size="21" /></span><div><strong>WebSpeak</strong><small>{{ copy.browserClient }}</small></div></div>
-      <div class="demo-tools"><span class="demo-badge">{{ copy.demoBadge }}</span><button type="button" @click="toggleLanguage">{{ copy.languageSwitch }}</button><a href="/">{{ copy.back }}</a></div>
+      <div class="demo-tools"><span class="demo-badge">{{ copy.demoBadge }}</span><select v-model="language" :aria-label="copy.languageMenu" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select><a href="/">{{ copy.back }}</a></div>
     </header>
 
     <div v-if="reconnecting" class="demo-reconnect" role="status"><Icon name="refresh" :size="17" /><span>{{ copy.reconnecting }}</span><button type="button" @click="reconnecting = false">{{ copy.restore }}</button></div>
@@ -35,11 +35,12 @@
 import { computed, ref } from "vue";
 import Icon from "../components/Icon.vue";
 
-type Language = "zh" | "en";
+type Language = "zh" | "en" | "de";
 interface DemoMessage { id: number; author: string; time: string; text: string; zhText?: string; enText?: string; mine: boolean }
 type Tab = "channel" | "server";
-const language = ref<Language>(localStorage.getItem("webspeak:language") === "en" ? "en" : "zh");
-const copy = computed(() => language.value === "zh" ? zh : en);
+const storedLanguage = localStorage.getItem("webspeak:language");
+const language = ref<Language>(storedLanguage === "en" || storedLanguage === "de" ? storedLanguage : "zh");
+const copy = computed(() => language.value === "zh" ? zh : language.value === "de" ? de : en);
 const selectedChannelId = ref("quiet");
 const activeTab = ref<Tab>("channel");
 const speakingId = ref("illusia");
@@ -56,13 +57,14 @@ const messages = ref<DemoMessage[]>([
   { id: 1, author: "illusia", time: "10:24", text: "", zhText: "大家好，欢迎来到 WebSpeak。", enText: "Hello everyone, welcome to WebSpeak.", mine: true },
   { id: 2, author: "msicbot", time: "10:25", text: "", zhText: "语音和文字频道都已同步。", enText: "Voice and text channels are in sync.", mine: false },
 ]);
-const zh = { browserClient: "浏览器语音工作台", demoBadge: "演示 — 模拟数据", languageSwitch: "English", back: "返回主页", reconnecting: "连接中断，正在恢复…", restore: "恢复连接", channels: "频道", channel: "频道", simulated: "演示状态", heroLead: "这里展示 WebSpeak 的频道、语音和聊天交互。", online: "人在线", voiceActivity: "语音活动", speakingNow: "正在语音中", speaking: "正在说话…", connected: "已连接", textChannel: "文字频道", chat: "聊天", server: "服务器", emptyChat: "暂无消息", placeholder: "发送一条消息…", voice: "语音", simulationControls: "模拟控制", stopSpeaking: "停止说话", simulateSpeaking: "模拟发言", poke: "戳一戳", simulateReconnect: "模拟重连", demoNote: "此页面不会连接真实 TeamSpeak 服务器。", you: "你", ready: "已就绪", pokedYou: "戳了你一下" };
-const en = { browserClient: "Browser voice workspace", demoBadge: "Demo — simulated data", languageSwitch: "中文", back: "Back home", reconnecting: "Connection interrupted, recovering…", restore: "Restore", channels: "Channels", channel: "Channel", simulated: "Simulation", heroLead: "A preview of WebSpeak channels, voice, and chat interactions.", online: "online", voiceActivity: "VOICE ACTIVITY", speakingNow: "Speaking now", speaking: "Speaking…", connected: "Connected", textChannel: "TEXT CHANNEL", chat: "chat", server: "Server", emptyChat: "No messages yet", placeholder: "Send a message…", voice: "Voice", simulationControls: "Simulation controls", stopSpeaking: "Stop speaking", simulateSpeaking: "Simulate speaking", poke: "Poke", simulateReconnect: "Simulate reconnect", demoNote: "This page never connects to a real TeamSpeak server.", you: "You", ready: "Ready", pokedYou: "poked you" };
+const zh = { languageMenu: "语言", browserClient: "浏览器语音工作台", demoBadge: "演示 — 模拟数据", languageSwitch: "English", back: "返回主页", reconnecting: "连接中断，正在恢复…", restore: "恢复连接", channels: "频道", channel: "频道", simulated: "演示状态", heroLead: "这里展示 WebSpeak 的频道、语音和聊天交互。", online: "人在线", voiceActivity: "语音活动", speakingNow: "正在语音中", speaking: "正在说话…", connected: "已连接", textChannel: "文字频道", chat: "聊天", server: "服务器", emptyChat: "暂无消息", placeholder: "发送一条消息…", voice: "语音", simulationControls: "模拟控制", stopSpeaking: "停止说话", simulateSpeaking: "模拟发言", poke: "戳一戳", simulateReconnect: "模拟重连", demoNote: "此页面不会连接真实 TeamSpeak 服务器。", you: "你", ready: "已就绪", pokedYou: "戳了你一下" };
+const en = { languageMenu: "Language", browserClient: "Browser voice workspace", demoBadge: "Demo — simulated data", languageSwitch: "中文", back: "Back home", reconnecting: "Connection interrupted, recovering…", restore: "Restore", channels: "Channels", channel: "Channel", simulated: "Simulation", heroLead: "A preview of WebSpeak channels, voice, and chat interactions.", online: "online", voiceActivity: "VOICE ACTIVITY", speakingNow: "Speaking now", speaking: "Speaking…", connected: "Connected", textChannel: "TEXT CHANNEL", chat: "chat", server: "Server", emptyChat: "No messages yet", placeholder: "Send a message…", voice: "Voice", simulationControls: "Simulation controls", stopSpeaking: "Stop speaking", simulateSpeaking: "Simulate speaking", poke: "Poke", simulateReconnect: "Simulate reconnect", demoNote: "This page never connects to a real TeamSpeak server.", you: "You", ready: "Ready", pokedYou: "poked you" };
+const de = { languageMenu: "Sprache", browserClient: "Sprachbereich im Browser", demoBadge: "Demo — simulierte Daten", languageSwitch: "中文", back: "Zur Startseite", reconnecting: "Verbindung unterbrochen, Wiederherstellung…", restore: "Wiederherstellen", channels: "Kanäle", channel: "Kanal", simulated: "Simulation", heroLead: "Eine Vorschau auf Kanäle, Sprache und Chat von WebSpeak.", online: "online", voiceActivity: "SPRACHAKTIVITÄT", speakingNow: "Spricht gerade", speaking: "Spricht…", connected: "Verbunden", textChannel: "TEXTKANAL", chat: "Chat", server: "Server", emptyChat: "Noch keine Nachrichten", placeholder: "Nachricht senden…", voice: "Sprache", simulationControls: "Simulation steuern", stopSpeaking: "Sprechen stoppen", simulateSpeaking: "Sprechen simulieren", poke: "Anstupsen", simulateReconnect: "Verbindung simulieren", demoNote: "Diese Seite verbindet sich nie mit einem echten TeamSpeak-Server.", you: "Du", ready: "Bereit", pokedYou: "hat dich angestupst" };
 const tabs = computed(() => [{ id: "channel" as const, label: copy.value.channel }, { id: "server" as const, label: copy.value.server }]);
 const selectedChannel = computed(() => channels.find((channel) => channel.id === selectedChannelId.value) ?? channels[0]);
 const visibleMessages = computed(() => activeTab.value === "channel" ? messages.value : []);
 
-function toggleLanguage() { language.value = language.value === "zh" ? "en" : "zh"; localStorage.setItem("webspeak:language", language.value); }
+function persistLanguage() { localStorage.setItem("webspeak:language", language.value); }
 function selectChannel(id: string) { selectedChannelId.value = id; activeTab.value = "channel"; }
 function toggleSpeaking() { speakingId.value = speakingId.value ? "" : selectedChannel.value.members[0]?.id ?? ""; }
 function messageText(message: DemoMessage): string { return language.value === "zh" ? message.zhText ?? message.text : message.enText ?? message.text; }
@@ -90,5 +92,6 @@ function avatarStyle(name: string) { let hash = 0; for (const char of name) hash
 :global(:root[data-theme="dark"]) .demo-message p, :global(:root[data-theme="dark"]) .demo-composer, :global(:root[data-theme="dark"]) .demo-actions-panel > button { background: #202f2c; color: #d7e7e3; }
 :global(:root[data-theme="dark"]) .demo-chat-head, :global(:root[data-theme="dark"]) .demo-user { border-color: #30413d; }
 @media (prefers-color-scheme: dark) { :global(:root[data-theme="system"]) .demo-channel-panel, :global(:root[data-theme="system"]) .demo-actions-panel, :global(:root[data-theme="system"]) .demo-main, :global(:root[data-theme="system"]) .demo-voice-card { background: #172321; border-color: #30413d; } }
-:global(button:focus-visible), :global(a:focus-visible), :global(input:focus-visible) { outline: 3px solid #69d2c7; outline-offset: 2px; }
+:global(button:focus-visible), :global(a:focus-visible), :global(input:focus-visible), :global(select:focus-visible) { outline: 3px solid #69d2c7; outline-offset: 2px; }
+.demo-tools select { padding: 7px 24px 7px 10px; color: #006a64; background: #e1f2ee; border: 1px solid #cbe6e0; border-radius: 7px; font-size: 11px; font-weight: 700; cursor: pointer; }
 </style>

@@ -10,7 +10,7 @@
             <small>{{ t('browserWorkspace') }}</small>
           </div>
         </div>
-        <div class="header-tools"><div class="header-note"><span class="tiny-dot"></span> {{ t('secureGateway') }}</div><a class="github-button" href="https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak" target="_blank" rel="noreferrer" :title="t('githubRepository')" :aria-label="t('githubRepository')"><Icon name="github" :size="18" /><span>{{ t('githubRepository') }}</span></a><button type="button" class="qq-button" :title="t('qqGroup')" :aria-label="t('qqGroup')" aria-haspopup="dialog" @click="qqModalOpen = true"><Icon name="qq" :size="18" /><span class="qq-label">{{ t('qqGroup') }}</span></button><a class="bilibili-button" href="https://space.bilibili.com/25414873" target="_blank" rel="noreferrer" :title="t('bilibiliProfile')" :aria-label="t('bilibiliProfile')"><span class="bilibili-glyph">B</span><span class="bilibili-label">{{ t('bilibiliProfile') }}</span></a><span class="version-badge" :title="`${t('currentVersion')}: v${appVersion}`" :aria-label="`${t('currentVersion')}: v${appVersion}`">v{{ appVersion }}</span><a class="changelog-button" href="https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/blob/master/CHANGELOG.md" target="_blank" rel="noreferrer" :title="t('viewChangelog')" :aria-label="t('viewChangelog')"><Icon name="clock" :size="16" /><span>{{ t('viewChangelog') }}</span></a><a class="guide-button" href="/admin" :title="t('adminConsole')" :aria-label="t('adminConsole')"><Icon name="settings" :size="15" /><span>{{ t('adminConsole') }}</span></a><button type="button" class="header-action theme-toggle" :title="themeLabel" :aria-label="themeLabel" @click="cycleTheme"><Icon :name="themeIcon" :size="17" /></button><button class="language-switch" :aria-label="t('langSwitch')" @click="toggleLanguage">{{ t('langSwitch') }}</button></div>
+        <div class="header-tools"><div class="header-note"><span class="tiny-dot"></span> {{ t('secureGateway') }}</div><a class="github-button" href="https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak" target="_blank" rel="noreferrer" :title="t('githubRepository')" :aria-label="t('githubRepository')"><Icon name="github" :size="18" /><span>{{ t('githubRepository') }}</span></a><button type="button" class="qq-button" :title="t('qqGroup')" :aria-label="t('qqGroup')" aria-haspopup="dialog" @click="qqModalOpen = true"><Icon name="qq" :size="18" /><span class="qq-label">{{ t('qqGroup') }}</span></button><a class="bilibili-button" href="https://space.bilibili.com/25414873" target="_blank" rel="noreferrer" :title="t('bilibiliProfile')" :aria-label="t('bilibiliProfile')"><span class="bilibili-glyph">B</span><span class="bilibili-label">{{ t('bilibiliProfile') }}</span></a><span class="version-badge" :title="`${t('currentVersion')}: v${appVersion}`" :aria-label="`${t('currentVersion')}: v${appVersion}`">v{{ appVersion }}</span><a class="changelog-button" href="https://github.com/EchoSixHIYA/WebSpeak-client-for-TeamSpeak/blob/master/CHANGELOG.md" target="_blank" rel="noreferrer" :title="t('viewChangelog')" :aria-label="t('viewChangelog')"><Icon name="clock" :size="16" /><span>{{ t('viewChangelog') }}</span></a><a class="guide-button" href="/admin" :title="t('adminConsole')" :aria-label="t('adminConsole')"><Icon name="settings" :size="15" /><span>{{ t('adminConsole') }}</span></a><button type="button" class="header-action theme-toggle" :title="themeLabel" :aria-label="themeLabel" @click="cycleTheme"><Icon :name="themeIcon" :size="17" /></button><select v-model="language" class="language-select" :aria-label="t('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select></div>
       </header>
 
       <main class="join-content">
@@ -109,7 +109,7 @@
             <button v-if="isMobileViewport" class="header-action microphone-header-toggle" :class="{ muted: microphoneMuted }" :title="microphoneMuted ? t('unmuteMic') : t('muteMic')" :aria-label="microphoneMuted ? t('microphoneMuted') : t('microphoneActive')" :aria-pressed="!microphoneMuted" @click="toggleMicrophone"><Icon :name="microphoneMuted ? 'mic-off' : 'mic'" :size="18" /></button>
             <button v-if="isMobileViewport" class="header-action" :title="t('audioSettings')" :aria-label="t('audioSettings')" @click="settingsOpen = true"><Icon name="settings" :size="18" /></button>
             <button type="button" class="header-action theme-toggle" :title="themeLabel" :aria-label="themeLabel" @click="cycleTheme"><Icon :name="themeIcon" :size="17" /></button>
-            <button class="language-switch workspace-language" :aria-label="t('langSwitch')" @click="toggleLanguage">{{ t('langSwitch') }}</button>
+            <select v-model="language" class="language-select workspace-language" :aria-label="t('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select>
             <button class="disconnect-button" @click="doDisconnect"><Icon name="door" :size="17" /><span>{{ t('exit') }}</span></button>
           </div>
         </header>
@@ -225,7 +225,7 @@
         <button type="button" :class="{ muted: microphoneMuted }" @click="toggleMicrophone"><Icon :name="microphoneMuted ? 'mic-off' : 'mic'" :size="18" /> {{ microphoneMuted ? t('unmuteMic') : t('muteMic') }}</button>
         <button type="button" @click="settingsOpen = true"><Icon name="settings" :size="18" /> {{ t('audioSettings') }}</button>
         <button type="button" @click="cycleTheme"><Icon :name="themeIcon" :size="18" /> {{ themeLabel }}</button>
-        <button type="button" @click="toggleLanguage"><Icon name="globe" :size="18" /> {{ t('langSwitch') }}</button>
+        <label class="language-menu-row"><Icon name="globe" :size="18" /><span>{{ t('languageMenu') }}</span><select v-model="language" class="language-select" :aria-label="t('languageMenu')" @change="persistLanguage"><option value="zh">中文</option><option value="en">English</option><option value="de">Deutsch</option></select></label>
         <button type="button" class="danger" @click="doDisconnect"><Icon name="door" :size="18" /> {{ t('exit') }}</button>
       </section>
 
@@ -374,14 +374,14 @@ const isMobileViewport = ref(false);
 const whisperPttActive = ref(false);
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
-type Language = "zh" | "en";
+type Language = "zh" | "en" | "de";
 const language = ref<Language>(getInitialLanguage());
 const themeMode = ref<ThemeMode>(getStoredTheme());
 const themeIcon = computed(() => isDarkTheme(themeMode.value) ? "sun" : "moon");
 const themeLabel = computed(() => isDarkTheme(themeMode.value) ? t("switchToLightTheme") : t("switchToDarkTheme"));
 const localizedWelcomeText = computed(() => (language.value === "en" ? welcomeTextEn.value : welcomeTextZh.value) || t("joinDescription"));
 applyTheme(themeMode.value);
-const translations: Record<Language, Record<string, string>> = {
+const translations: Record<string, Record<string, string>> = {
   zh: {
     themeSystem: "跟随系统",
     themeLight: "浅色主题",
@@ -615,6 +615,7 @@ const translations: Record<Language, Record<string, string>> = {
     close: "关闭",
     done: "完成",
     voiceLobby: "语音大厅",
+    languageMenu: "语言",
     langSwitch: "English",
   },
   en: {
@@ -850,8 +851,247 @@ const translations: Record<Language, Record<string, string>> = {
     close: "Close",
     done: "Done",
     voiceLobby: "Voice lobby",
+    languageMenu: "Language",
     langSwitch: "中文",
   },
+};
+
+translations.de = {
+  ...translations.en,
+  themeSystem: "Systemdesign",
+  themeLight: "Helles Design",
+  themeDark: "Dunkles Design",
+  switchToLightTheme: "Zum hellen Design wechseln",
+  switchToDarkTheme: "Zum dunklen Design wechseln",
+  browserWorkspace: "Sprachbereich im Browser",
+  secureGateway: "Sicheres Sprach-Gateway",
+  adminConsole: "Administrationskonsole",
+  currentVersion: "Aktuelle Version",
+  viewChangelog: "Änderungsprotokoll ansehen",
+  notConfigured: "Das TeamSpeak-Ziel von WebSpeak wurde noch nicht konfiguriert.",
+  configureNow: "Administrationskonsole öffnen",
+  privateAudio: "Private Community-Sprachumgebung",
+  joinLine1: "Verbinde dich mit deinem Server,",
+  joinLine2: "und beginne das Gespräch.",
+  joinDescription: "Keine Installation des TeamSpeak-Clients nötig. Öffne den Browser und tritt einem Sprachkanal bei – leichtgewichtig und mit geringer Latenz.",
+  highQuality: "Hochwertige Sprache",
+  opusAudio: "Opus-Übertragung mit geringer Latenz",
+  secureJoin: "Sicher beitreten",
+  inviteProtected: "Einladungslink schützt deinen Server",
+  realtime: "Präsenz in Echtzeit",
+  membersSync: "Kanalmitglieder bleiben synchron",
+  privateServer: "Privater Sprachserver",
+  mainNav: "Hauptnavigation",
+  memberVolume: "Mitgliedslautstärke",
+  joinServer: "DEINEM SERVER BEITRETEN",
+  welcomeBack: "Willkommen zurück",
+  joinLead: "Wähle einen Namen und den Kanal, dem du beitreten möchtest.",
+  serverAddress: "TeamSpeak-Serveradresse",
+  serverAddressPlaceholder: "z. B. ts.example.com oder 127.0.0.1",
+  serverPort: "Sprachport",
+  serverPortPlaceholder: "9987",
+  serverAddressHint: "Dies ist die TeamSpeak-Adresse und der Port, die vom Gateway erreicht werden – keine direkte Browseradresse.",
+  nickname: "Dein Name",
+  nicknamePlaceholder: "z. B. Alex Rivera",
+  targetChannel: "Zielkanal",
+  optional: "Optional",
+  emptyDefault: "Leer lassen, um den Standardkanal zu verwenden",
+  rememberIdentity: "Diese TeamSpeak-Identität auf diesem Gerät speichern",
+  rememberIdentityHint: "Wird nur auf diesem Gerät gespeichert und bei der nächsten Verbindung wiederverwendet.",
+  rememberIdentityConcurrentWarning: "Dieselbe Identität kann in einem Browser nur eine Verbindung gleichzeitig verwenden. Deaktiviere die Option für eine zweite Verbindung oder nutze einen anderen Browser.",
+  identityOptions: "Identitätsoptionen des Geräts",
+  localPersistenceUnavailable: "Dauerhafter Browserspeicher ist nicht verfügbar; diese Sitzung verwendet eine temporäre Identität.",
+  favoriteServers: "Favoriten",
+  recentServers: "Zuletzt verwendet",
+  saveFavorite: "Als Favorit speichern",
+  removeFavorite: "Aus Favoriten entfernen",
+  savedFavoriteToast: "Als Favorit gespeichert",
+  removedFavoriteToast: "Aus Favoriten entfernt",
+  clearLocalData: "Lokale Daten löschen",
+  clearLocalDataConfirm: "Identität, Favoriten, letzte Verbindungen und Audioeinstellungen dieses Geräts löschen?",
+  localDataCleared: "Lokale Daten gelöscht",
+  connecting: "Verbindung wird hergestellt…",
+  enterVoice: "Sprachbereich betreten",
+  connectionAuthorized: "Verbindungsdaten werden nur für diese Sprachsitzung verwendet",
+  githubRepository: "GitHub-Repository",
+  qqGroup: "QQ-Gruppe",
+  qqGroupQrAlt: "QR-Code der QQ-Gruppe",
+  qqJoinDirect: "Oder direkt über den Gruppenlink beitreten",
+  joinQqGroup: "QQ-Gruppe beitreten",
+  bilibiliProfile: "Bilibili-Profil",
+  browserSupport: "Chrome / Edge 94+",
+  teamSpeakClient: "TeamSpeak-Browserclient",
+  home: "Startseite",
+  activity: "Aktivität",
+  server: "Server",
+  discover: "Entdecken",
+  downloads: "Downloads",
+  help: "Hilfe",
+  needHelp: "Brauchst du Hilfe? Wende dich an den Serveradministrator.",
+  serverOptions: "Weitere Serveroptionen",
+  online: "Online",
+  audioSettings: "Audioeinstellungen",
+  desktopAudioControls: "Audiosteuerung",
+  startAccompaniment: "Begleitung teilen",
+  stopAccompaniment: "Begleitung stoppen",
+  accompanimentStarted: "Begleitung wird geteilt",
+  accompanimentStopped: "Begleitung beendet",
+  accompanimentActive: "Begleitung aktiv",
+  accompanimentNeedsWebRtc: "Die Begleitungsfunktion benötigt WebRTC.",
+  accompanimentNoAudio: "Die ausgewählte Quelle enthält kein teilbares Audio. Wähle sie erneut und aktiviere die Audiofreigabe.",
+  accompanimentPermissionDenied: "Begleitungs-Audio konnte nicht abgerufen werden. Erlaube die Bildschirmfreigabe und aktiviere die Audiofreigabe.",
+  accompanimentUnsupported: "Dieser Browser unterstützt das Teilen von Begleitung nicht.",
+  serverPassword: "Serverpasswort",
+  optionalPassword: "Leer lassen, wenn kein Passwort erforderlich ist",
+  switchChannel: "Kanal wechseln",
+  searchChannels: "Kanäle suchen",
+  voiceChannels: "Sprachkanäle",
+  peopleOnline: "{{count}} online",
+  channelPreparing: "Kanalliste wird vorbereitet",
+  channelPreparingLead: "Auch ohne Kanalliste des Servers funktioniert die Sprachverbindung.",
+  reload: "Neu laden",
+  quickActions: "Schnellaktionen",
+  inviteFriends: "Freunde einladen",
+  audioAndMic: "Audio und Mikrofon",
+  stableConnection: "Stabile Verbindung",
+  websocket: "WebSocket",
+  serverBreadcrumb: "Server",
+  copyInvite: "Einladungslink kopieren",
+  exit: "Beenden",
+  live: "LIVE",
+  voiceSpace: "Sprachbereich",
+  roomDescription: "Bleibe mit allen Mitgliedern dieses Kanals klar und natürlich im Gespräch.",
+  membersOnline: "{{count}} Mitglieder online",
+  encrypted: "Verschlüsselte Verbindung",
+  voiceActivity: "SPRACHAKTIVITÄT",
+  speakingNow: "Spricht gerade",
+  onlineShort: "{{count}} online",
+  you: "Du",
+  selfSuffix: " (Du)",
+  connected: "Verbunden",
+  speaking: "Spricht…",
+  connectedYou: "Verbunden · du",
+  waitingForMembers: "Warte auf weitere Mitglieder",
+  prepareMicrophone: "Du kannst dein Mikrofon hier vorbereiten.",
+  moreMembers: "Weitere Mitglieder",
+  viewLeft: "Links anzeigen",
+  textChannel: "TEXTKANAL",
+  channelChat: "Chat in {{channel}}",
+  messageCount: "{{count}} Nachrichten",
+  chatStart: "Dies ist der Anfang des Chats",
+  chatStartLead: "Sende eine Nachricht und begrüße deine Kanalmitglieder.",
+  chatTabs: "Chat-Tabs",
+  serverChat: "Server",
+  privateMessage: "Private Nachricht",
+  privateMessagePlaceholder: "Private Nachricht senden…",
+  serverMessagePlaceholder: "Nachricht an den Server senden…",
+  channelPasswordPrompt: "Kanalpasswort eingeben",
+  privateChatStart: "Dies ist der Anfang des privaten Chats",
+  privateChatStartLead: "Sende eine private Nachricht.",
+  eventLog: "Ereignisprotokoll",
+  eventCount: "{{count}} Ereignisse",
+  noEvents: "Noch keine Serverereignisse",
+  noEventsLead: "Änderungen an Kanälen und Mitgliedern werden hier angezeigt.",
+  available: "Verfügbar",
+  away: "Abwesend",
+  awayPrompt: "Abwesenheitsnachricht (optional)",
+  poke: "Anstupsen",
+  pokedYou: "hat dich angestupst",
+  pokeMessagePrompt: "Anstupsnachricht (optional)",
+  pokeSent: "Anstupser gesendet",
+  copyNickname: "Namen kopieren",
+  copiedNickname: "Name kopiert",
+  attachmentUnavailable: "Anhänge nicht verfügbar",
+  emojiUnavailable: "Emojis nicht verfügbar",
+  sendMessagePlaceholder: "Nachricht an die Kanalmitglieder…",
+  send: "Senden",
+  muteMic: "Mikrofon stummschalten",
+  unmuteMic: "Mikrofon einschalten",
+  microphoneActive: "Mikrofon eingeschaltet",
+  microphoneMuted: "Mikrofon ausgeschaltet",
+  microphoneActiveHint: "Bei ausgeschaltetem Mikrofon wird kein Mikrofonton an den Server gesendet.",
+  microphoneMutedHint: "Dein Mikrofon ist ausgeschaltet; andere Mitglieder können dich nicht hören.",
+  sending: "Wird gesendet",
+  exitVoice: "Sprachbereich verlassen",
+  people: "Mitglieder",
+  searchMembers: "Mitglieder suchen",
+  onlineGroup: "Online — {{count}}",
+  yourDevice: "Dein Gerät",
+  memberOnline: "Online",
+  memberStates: "Mitgliederstatus",
+  inputMuted: "Mikrofon deaktiviert",
+  outputMuted: "Lautsprecher deaktiviert",
+  channelCommander: "Kanaladministrator",
+  noMatchingMembers: "Keine passenden Mitglieder gefunden",
+  noMembersInChannel: "Keine Mitglieder in diesem Kanal",
+  volumeTip: "Ziehe den Regler rechts neben einem Mitglied, um dessen Lautstärke einzeln anzupassen.",
+  moreMemberOptions: "Weitere Mitgliederoptionen",
+  connectedToast: "Mit diesem Server verbunden",
+  connectionInterrupted: "Verbindung unterbrochen, Wiederherstellung wird versucht…",
+  reconnectingAttempt: "Verbindungsversuch {{attempt}}",
+  reconnectFailed: "Verbindung konnte nicht wiederhergestellt werden",
+  reconnectNow: "Jetzt neu verbinden",
+  back: "Zurück",
+  volumeToast: "Die Lautstärke jedes Mitglieds kann separat angepasst werden.",
+  copiedToast: "Einladungslink kopiert",
+  copyFailedToast: "Kopieren fehlgeschlagen. Kopiere die Browseradresse manuell.",
+  leftToast: "Sprachbereich sicher verlassen",
+  focusedToast: "Diese Version konzentriert sich auf den Sprachbereich.",
+  settings: "Einstellungen",
+  profile: "Profil",
+  privacy: "Datenschutz",
+  notifications: "Benachrichtigungen",
+  browserClient: "Browserclient",
+  audioConfiguration: "Audiokonfiguration",
+  inputDevice: "Eingabegerät",
+  microphone: "Mikrofon",
+  microphoneState: "Mikrofonstatus",
+  defaultMicrophone: "Standardmikrofon des Browsers",
+  microphoneNumber: "Mikrofon {{index}}",
+  speakerNumber: "Lautsprecher {{index}}",
+  permission: "Berechtigung",
+  permissionUnknown: "Noch nicht angefragt",
+  permissionGranted: "Erlaubt",
+  permissionDenied: "Abgelehnt",
+  inputVolume: "Eingangslautstärke",
+  voxThreshold: "Sprachaktivierungsschwelle",
+  micLevel: "Mikrofonlautstärke",
+  microphoneTest: "Mikrofontest",
+  stopTest: "Test stoppen",
+  startTest: "Test starten",
+  localMicTestHint: "Lokaler Test: Die Aufnahme wird nur im Browser wiedergegeben und nicht an TeamSpeak gesendet.",
+  silence: "Ruhig",
+  optimal: "Optimal",
+  loud: "Laut",
+  outputDevice: "Ausgabegerät",
+  speakers: "Lautsprecher / Kopfhörer",
+  defaultOutput: "Standardausgabe des Browsers",
+  outputVolume: "Ausgabelautstärke",
+  outputDeviceUnsupported: "Dieser Browser unterstützt keine Auswahl des Ausgabegeräts. Die Standardausgabe wird verwendet.",
+  notificationVolume: "Benachrichtigungslautstärke",
+  audioStatus: "Audiostatus",
+  audioReady: "Audio bereit",
+  audioSuspended: "Audio wurde vom Browser pausiert",
+  audioUnknown: "Nicht initialisiert",
+  audioPrivacy: "WebSpeak verarbeitet Audio im sicheren Browserkontext und speichert keine Aufnahmen.",
+  mobileNavigation: "Mobile Navigation",
+  mobileChannels: "Kanäle",
+  mobileChat: "Chat",
+  mobileVoice: "Sprache",
+  mobileMore: "Mehr",
+  whisperTargets: "Flüsterziele",
+  setWhisperTarget: "Als Flüsterziel festlegen",
+  removeWhisperTarget: "Flüsterziel entfernen",
+  clearWhisperTargets: "Ziele löschen",
+  whisperHoldToTalk: "Zum Flüstern gedrückt halten",
+  releaseWhisper: "Loslassen, um das Flüstern zu beenden",
+  cancel: "Abbrechen",
+  saveChanges: "Änderungen speichern",
+  close: "Schließen",
+  done: "Fertig",
+  voiceLobby: "Sprachlobby",
+  languageMenu: "Sprache",
+  langSwitch: "中文",
 };
 
 function initialServerTarget() {
@@ -864,12 +1104,14 @@ function initialServerTarget() {
 
 function getInitialLanguage(): Language {
   const stored = localStorage.getItem("webspeak:language");
-  if (stored === "zh" || stored === "en") return stored;
-  return typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en";
+  if (stored === "zh" || stored === "en" || stored === "de") return stored;
+  if (typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("zh")) return "zh";
+  if (typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("de")) return "de";
+  return "en";
 }
 
 function t(key: string, variables: Record<string, string | number> = {}) {
-  let value = translations[language.value][key] ?? translations.zh[key] ?? key;
+  let value = translations[language.value][key] ?? translations.en[key] ?? translations.zh[key] ?? key;
   for (const [name, replacement] of Object.entries(variables)) value = value.replaceAll(`{{${name}}}`, String(replacement));
   return value;
 }
@@ -922,8 +1164,7 @@ function localizedMessage(message: string) {
   return message;
 }
 
-function toggleLanguage() {
-  language.value = language.value === "zh" ? "en" : "zh";
+function persistLanguage() {
   localStorage.setItem("webspeak:language", language.value);
   void saveLocalPreferences({ schemaVersion: 1, language: language.value });
 }
@@ -1088,7 +1329,7 @@ onMounted(() => {
   browserError.value = checkSupport() ?? "";
   void loadPublicConfig();
   void loadLocalPreferences().then((preferences) => {
-    if (!localStorage.getItem("webspeak:language") && (preferences.language === "zh" || preferences.language === "en")) language.value = preferences.language;
+    if (!localStorage.getItem("webspeak:language") && (preferences.language === "zh" || preferences.language === "en" || preferences.language === "de")) language.value = preferences.language;
     if (!localStorage.getItem("webspeak:theme") && (preferences.theme === "system" || preferences.theme === "light" || preferences.theme === "dark")) {
       themeMode.value = preferences.theme;
       applyTheme(themeMode.value);
@@ -1340,7 +1581,8 @@ function memberDisplayName(member: ChannelMember): string {
 }
 
 function formatTime(timestamp: number) {
-  return new Intl.DateTimeFormat(language.value === "zh" ? "zh-CN" : "en-US", { hour: "2-digit", minute: "2-digit" }).format(timestamp);
+  const locale = language.value === "zh" ? "zh-CN" : language.value === "de" ? "de-DE" : "en-US";
+  return new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(timestamp);
 }
 
 function rangeStyle(value: number, max: number) {
@@ -1489,6 +1731,10 @@ function stopWhisperTalk(): void {
 .header-note { display: flex; align-items: center; gap: 8px; color: #71807c; font-size: 12px; }
 .language-switch { min-width: 50px; min-height: 28px; padding: 0 9px; color: #006a64; background: #e2f2ef; border: 1px solid #c8e6e1; border-radius: 7px; font-size: 10px; font-weight: 700; cursor: pointer; transition: .18s; }
 .language-switch:hover { color: #fff; background: #006a64; border-color: #006a64; }
+.language-select { min-width: 82px; min-height: 28px; padding: 0 24px 0 9px; color: #006a64; background: #e2f2ef; border: 1px solid #c8e6e1; border-radius: 7px; font-size: 10px; font-weight: 700; cursor: pointer; }
+.language-select:focus-visible { outline: 3px solid #69d2c7; outline-offset: 2px; }
+.language-menu-row { display: flex; align-items: center; gap: 10px; }
+.language-menu-row > span { flex: 1; }
 .tiny-dot, .online-dot, .status-pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #65d879; box-shadow: 0 0 0 4px rgba(101, 216, 121, .14); }
 .join-content { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(480px, 520px); align-items: center; gap: clamp(40px, 6vw, 88px); padding: 38px 0 56px; }
 .join-copy { max-width: 630px; }
@@ -1828,7 +2074,7 @@ function stopWhisperTalk(): void {
 .settings-content, .settings-nav { background: var(--surface-1); }
 .settings-nav { border-right-color: var(--border); }
 .settings-section h3, .settings-header h2 { color: var(--text-primary); }
-.settings-select { background: var(--surface-2); border-color: var(--border); }
+ .settings-select, .language-select { background: var(--surface-2); border-color: var(--border); color: var(--text-primary); }
 .audio-level-track, .meter i { background: var(--border); }
 .member-presence { border-color: var(--surface-1); }
 .member-row:hover, .member-row:focus-within { background: color-mix(in srgb, var(--accent) 10%, var(--surface-1)); box-shadow: 0 4px 12px color-mix(in srgb, var(--text-primary) 8%, transparent); }
@@ -2079,7 +2325,7 @@ function stopWhisperTalk(): void {
   .join-page .header-tools { gap: 4px; }
   .join-page .github-button, .join-page .changelog-button, .join-page .guide-button { width: 32px; min-width: 32px; min-height: 32px; height: 32px; }
   .join-page .version-badge { min-height: 32px; padding-inline: 6px; font-size: 10px; }
-  .join-page .language-switch { min-width: 44px; padding-inline: 6px; font-size: 11px; }
+  .join-page .language-select { min-width: 82px; padding-inline: 6px; font-size: 11px; }
   .workspace-header { padding-inline: 10px; }
   .channel-switcher { max-width: 112px; }
   .channel-switcher select { max-width: 72px; }
@@ -2108,7 +2354,7 @@ function stopWhisperTalk(): void {
   .join-page .github-button .ui-icon { width: 16px; height: 16px; }
   .join-page .bilibili-glyph { width: 18px; height: 18px; }
   .join-page .version-badge { min-width: 28px; min-height: 28px; padding-inline: 4px; font-size: 9px; }
-  .join-page .language-switch { min-width: 40px; min-height: 28px; padding-inline: 4px; font-size: 10px; }
+  .join-page .language-select { min-width: 76px; min-height: 28px; padding-inline: 4px; font-size: 10px; }
 }
 
 @media (max-width: 360px) {
