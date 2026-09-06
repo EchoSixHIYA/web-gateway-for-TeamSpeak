@@ -157,7 +157,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerD
   align-items: start;
   align-content: start;
   gap: 3px;
-  width: 280px;
+  width: min(360px, calc(100vw - 16px));
   height: auto;
   max-height: none;
   padding: 7px;
@@ -206,21 +206,23 @@ onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerD
   justify-content: space-between;
   min-width: 0;
   flex: 1;
-  gap: 5px;
+  gap: 8px;
 }
 
 .language-option strong,
 .language-option small {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
 }
 
 .language-option strong {
+  flex: 0 0 auto;
   font-size: 12px;
 }
 
 .language-option small {
+  flex: 0 0 auto;
   color: #91a19c;
   font-size: 10px;
   font-weight: 700;
@@ -282,7 +284,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerD
   }
 
   .language-dropdown {
-    width: 250px;
+    width: min(360px, calc(100vw - 16px));
   }
 }
 </style>
