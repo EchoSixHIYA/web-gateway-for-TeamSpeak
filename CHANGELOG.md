@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.7] — 2026-09-06
+
+### 中文
+
+- 增加 Deutsch 界面支持和 Telegram 群组入口。
+- 增加桌面端整体音量滑块，默认收起并在悬停时展开。
+- 修复伴奏音量忽大忽小的问题。
+
+### English
+
+- Added German UI support and a Telegram community link.
+- Added a compact desktop master-volume slider that expands on hover.
+- Fixed accompaniment volume fluctuations.
+
+### Deutsch
+
+- Deutsche Benutzeroberfläche und Telegram-Community-Link hinzugefügt.
+- Kompakten Gesamtlautstärkeregler für den Desktop ergänzt, der sich beim Überfahren öffnet.
+- Schwankende Lautstärke bei der Begleittonfreigabe behoben.
+
 ## [0.1.6] — 2026-09-04
 
 ### 中文
