@@ -213,6 +213,10 @@
           <div class="desktop-audio-dock-copy"><strong>{{ t('desktopAudioControls') }}</strong><span>{{ accompanimentActive ? t('accompanimentActive') : t('volumeTip') }}</span></div>
           <div class="desktop-audio-dock-actions">
             <button type="button" class="dock-audio-button microphone-header-toggle" :class="{ muted: microphoneMuted }" :title="microphoneMuted ? t('unmuteMic') : t('muteMic')" :aria-label="microphoneMuted ? t('microphoneMuted') : t('microphoneActive')" :aria-pressed="!microphoneMuted" @click="toggleMicrophone"><Icon :name="microphoneMuted ? 'mic-off' : 'mic'" :size="18" /></button>
+            <div class="dock-output-control">
+              <button type="button" class="dock-audio-button" :class="{ muted: outputMuted }" :title="outputMuted ? t('unmuteOutput') : t('muteOutput')" :aria-label="outputMuted ? t('unmuteOutput') : t('muteOutput')" :aria-pressed="!outputMuted" @click="toggleOutputMute"><Icon :name="outputMuted ? 'volume-off' : 'volume'" :size="18" /></button>
+              <input class="dock-output-slider" type="range" min="0" max="100" :value="outputVolume * 100" :style="rangeStyle(outputVolume, 1)" :aria-label="t('overallVolume')" @input="onOutputVolume" />
+            </div>
             <button type="button" class="dock-audio-button" :title="t('audioSettings')" :aria-label="t('audioSettings')" @click="settingsOpen = true"><Icon name="settings" :size="18" /></button>
             <button type="button" class="dock-audio-button accompaniment-toggle" :class="{ active: accompanimentActive }" :title="accompanimentActive ? t('stopAccompaniment') : t('startAccompaniment')" :aria-label="accompanimentActive ? t('stopAccompaniment') : t('startAccompaniment')" :aria-pressed="accompanimentActive" @click="toggleAccompaniment"><Icon name="music" :size="18" /></button>
           </div>
@@ -301,6 +305,7 @@ const {
   microphoneMuted,
   inputVolume,
   outputVolume,
+  outputMuted,
   notificationVolume,
   voxThreshold,
   inputDevices,
@@ -321,6 +326,7 @@ const {
   setVolume,
   setInputVolume,
   setOutputVolume,
+  toggleOutputMute,
   setVoxThreshold,
   setNotificationVolume,
   prepareInputDevices,
@@ -474,6 +480,9 @@ const translations: Record<string, Record<string, string>> = {
     serverOptions: "更多服务器选项",
     online: "在线",
     audioSettings: "音频设置",
+    overallVolume: "整体音量",
+    muteOutput: "临时静音",
+    unmuteOutput: "恢复声音",
     desktopAudioControls: "音频控制",
     startAccompaniment: "共享伴奏",
     stopAccompaniment: "停止伴奏",
@@ -716,6 +725,9 @@ const translations: Record<string, Record<string, string>> = {
     serverOptions: "More server options",
     online: "Online",
     audioSettings: "Audio settings",
+    overallVolume: "Master volume",
+    muteOutput: "Mute all audio",
+    unmuteOutput: "Restore audio",
     desktopAudioControls: "Audio controls",
     startAccompaniment: "Share accompaniment",
     stopAccompaniment: "Stop accompaniment",
@@ -961,6 +973,9 @@ translations.de = {
   serverOptions: "Weitere Serveroptionen",
   online: "Online",
   audioSettings: "Audioeinstellungen",
+  overallVolume: "Gesamtlautstärke",
+  muteOutput: "Alle Töne stummschalten",
+  unmuteOutput: "Ton wiederherstellen",
   desktopAudioControls: "Audiosteuerung",
   startAccompaniment: "Begleitung teilen",
   stopAccompaniment: "Begleitung stoppen",
@@ -2090,9 +2105,14 @@ function stopWhisperTalk(): void {
 .desktop-audio-dock-copy strong { overflow: hidden; color: var(--text-primary); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .desktop-audio-dock-copy span { overflow: hidden; font-size: 10px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .desktop-audio-dock-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.dock-output-control { display: flex; align-items: center; gap: 5px; }
+.dock-output-slider { width: 76px; height: 5px; appearance: none; border-radius: 999px; outline: none; cursor: pointer; }
+.dock-output-slider::-webkit-slider-thumb { width: 14px; height: 14px; appearance: none; border: 2px solid #81d8d0; border-radius: 50%; background: var(--surface-1); cursor: pointer; }
+.dock-output-slider::-moz-range-thumb { width: 14px; height: 14px; border: 2px solid #81d8d0; border-radius: 50%; background: var(--surface-1); cursor: pointer; }
 .dock-audio-button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 9px; cursor: pointer; transition: color .16s, background .16s, border-color .16s, transform .16s; }
 .dock-audio-button:hover, .dock-audio-button:focus-visible { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface-1)); border-color: color-mix(in srgb, var(--accent) 32%, var(--border)); transform: translateY(-1px); }
 .dock-audio-button.microphone-header-toggle.muted { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--surface-1)); }
+.dock-audio-button.muted { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--surface-1)); }
 .dock-audio-button.accompaniment-toggle.active { color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--surface-1)); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
 .settings-mode-switch { width: fit-content; margin: 0 0 7px; }
 .settings-hint { margin: -1px 0 19px; color: #8b9994; font-size: 11px; }

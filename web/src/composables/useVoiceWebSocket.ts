@@ -137,6 +137,7 @@ export function useVoiceWebSocket() {
   const microphoneMuted = ref(false);
   const inputVolume = ref(1);
   const outputVolume = ref(1);
+  const outputMuted = ref(false);
   const notificationVolume = ref(0.5);
   const voxThreshold = ref(0.008);
   let voxAttack = 0;
@@ -230,6 +231,16 @@ export function useVoiceWebSocket() {
     for (const timer of speakingTimers.values()) clearTimeout(timer);
     speakingTimers.clear();
     speakingIds.clear();
+  }
+
+  function effectiveOutputVolume(): number {
+    return outputMuted.value ? 0 : outputVolume.value;
+  }
+
+  function applyOutputVolume(): void {
+    const level = effectiveOutputVolume();
+    for (const [clientId, gain] of remoteGains) gain.gain.value = (volumes[clientId] ?? 1) * level;
+    if (webrtcOutputElement) webrtcOutputElement.volume = level;
   }
 
   function getAudioCtx(): SinkAudioContext {
@@ -651,7 +662,7 @@ export function useVoiceWebSocket() {
       output.autoplay = true;
       output.muted = false;
       output.setAttribute("playsinline", "");
-      output.volume = outputVolume.value;
+      output.volume = effectiveOutputVolume();
       output.setAttribute("aria-hidden", "true");
       output.tabIndex = -1;
       output.style.position = "fixed";
@@ -929,7 +940,7 @@ export function useVoiceWebSocket() {
   }
 
   function playNotification(kind: "connected" | "disconnected" | "poke" | "private" | "reconnectFailed"): void {
-    if (notificationVolume.value <= 0 || typeof window === "undefined") return;
+    if (notificationVolume.value <= 0 || outputMuted.value || effectiveOutputVolume() <= 0 || typeof window === "undefined") return;
     try {
       const ctx = getAudioCtx();
       if (ctx.state === "suspended") return;
@@ -946,7 +957,7 @@ export function useVoiceWebSocket() {
       oscillator.frequency.setValueAtTime(frequencies[kind][0], now);
       oscillator.frequency.setValueAtTime(frequencies[kind][1], now + 0.08);
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, notificationVolume.value * 0.12), now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, notificationVolume.value * effectiveOutputVolume() * 0.12), now + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
       oscillator.connect(gain);
       gain.connect(ctx.destination);
@@ -974,7 +985,7 @@ export function useVoiceWebSocket() {
 
     if (!decoder) {
       const gainNode = ctx.createGain();
-      gainNode.gain.value = (volumes[clientId] ?? 1) * outputVolume.value;
+      gainNode.gain.value = (volumes[clientId] ?? 1) * effectiveOutputVolume();
       gainNode.connect(ctx.destination);
       remoteGains.set(clientId, gainNode);
       const generation = ++nextRemoteDecoderGeneration;
@@ -1498,7 +1509,7 @@ export function useVoiceWebSocket() {
       void saveAudioPreferences();
     }
     const gain = remoteGains.get(clientId);
-    if (gain) gain.gain.value = normalized * outputVolume.value;
+    if (gain) gain.gain.value = normalized * effectiveOutputVolume();
     if (webrtcPeer || webrtcActive.value) sendCmd("setMemberVolume", { clientId, volume: normalized });
   }
 
@@ -1520,9 +1531,13 @@ export function useVoiceWebSocket() {
 
   function setOutputVolume(volume: number): void {
     outputVolume.value = Math.max(0, Math.min(1, volume));
-    for (const [clientId, gain] of remoteGains) gain.gain.value = (volumes[clientId] ?? 1) * outputVolume.value;
-    if (webrtcOutputElement) webrtcOutputElement.volume = outputVolume.value;
+    applyOutputVolume();
     void saveAudioPreferences();
+  }
+
+  function toggleOutputMute(): void {
+    outputMuted.value = !outputMuted.value;
+    applyOutputVolume();
   }
 
   function setVoxThreshold(threshold: number): void {
@@ -1546,6 +1561,7 @@ export function useVoiceWebSocket() {
     microphoneMuted,
     inputVolume,
     outputVolume,
+    outputMuted,
     notificationVolume,
     voxThreshold,
     inputDevices,
@@ -1569,6 +1585,7 @@ export function useVoiceWebSocket() {
     setVolume,
     setInputVolume,
     setOutputVolume,
+    toggleOutputMute,
     setVoxThreshold,
     setNotificationVolume,
     prepareInputDevices,
