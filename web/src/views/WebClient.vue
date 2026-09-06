@@ -1,5 +1,5 @@
 <template>
-  <div class="web-client">
+  <div :class="['web-client', `language-${language}`]">
     <!-- Connection / welcome screen -->
     <section v-if="!voiceState.connected && !voiceState.reconnecting && !voiceState.reconnectFailed" class="join-page">
       <header class="join-header">
@@ -2631,6 +2631,72 @@ function stopWhisperTalk(): void {
 .performance-metrics strong { margin-top: 6px; color: var(--accent); font-size: 18px; }
 .performance-metrics span { margin-top: 4px; color: var(--text-muted); font-size: 9px; }
 .performance-status { margin: 11px 0 0; color: var(--text-muted); font-size: 10px; }
+
+/* Latin-script translations need a little more room than Chinese copy. Keep
+   the Chinese layout unchanged and use a compact type scale for English and
+   German so headings, labels, and actions do not force awkward wrapping. */
+.web-client.language-en .join-page .brand-lockup strong,
+.web-client.language-de .join-page .brand-lockup strong { font-size: 19.8px; }
+.web-client.language-en .join-page .brand-lockup small,
+.web-client.language-en .join-page .header-note,
+.web-client.language-de .join-page .brand-lockup small,
+.web-client.language-de .join-page .header-note { font-size: 11px; }
+.web-client.language-en .join-page .github-button,
+.web-client.language-en .join-page .qq-button,
+.web-client.language-en .join-page .bilibili-button,
+.web-client.language-en .join-page .changelog-button,
+.web-client.language-en .join-page .guide-button,
+.web-client.language-de .join-page .github-button,
+.web-client.language-de .join-page .qq-button,
+.web-client.language-de .join-page .bilibili-button,
+.web-client.language-de .join-page .changelog-button,
+.web-client.language-de .join-page .guide-button { font-size: 9.7px; }
+.web-client.language-en .join-page .eyebrow,
+.web-client.language-de .join-page .eyebrow { font-size: 12px; }
+.web-client.language-en .join-page .join-copy h1,
+.web-client.language-de .join-page .join-copy h1 { font-size: clamp(46px, 5.8vw, 79px); }
+.web-client.language-en .join-page .join-description,
+.web-client.language-de .join-page .join-description { font-size: 18px; }
+.web-client.language-en .join-page .promise-item b,
+.web-client.language-de .join-page .promise-item b { font-size: 13.2px; }
+.web-client.language-en .join-page .promise-item small,
+.web-client.language-de .join-page .promise-item small { font-size: 11px; }
+.web-client.language-en .join-page .card-kicker,
+.web-client.language-de .join-page .card-kicker { font-size: 11px; }
+.web-client.language-en .join-page .join-card h2,
+.web-client.language-de .join-page .join-card h2 { font-size: 29.7px; }
+.web-client.language-en .join-page .card-lead,
+.web-client.language-de .join-page .card-lead { font-size: 14.3px; }
+.web-client.language-en .join-page .notice,
+.web-client.language-de .join-page .notice { font-size: 13.2px; }
+.web-client.language-en .join-page .field-label,
+.web-client.language-de .join-page .field-label { font-size: 12px; }
+.web-client.language-en .join-page .field-wrap input,
+.web-client.language-de .join-page .field-wrap input { font-size: 14.3px; }
+.web-client.language-en .join-page .primary-button,
+.web-client.language-de .join-page .primary-button { font-size: 13.2px; }
+.web-client.language-en .join-page .connect-button,
+.web-client.language-de .join-page .connect-button { font-size: 14.3px; }
+.web-client.language-en .join-page .join-meta,
+.web-client.language-en .join-page .join-footer,
+.web-client.language-de .join-page .join-meta,
+.web-client.language-de .join-page .join-footer { font-size: 11px; }
+
+@media (max-width: 740px) {
+  .web-client.language-en .join-page .join-copy h1,
+  .web-client.language-de .join-page .join-copy h1 { font-size: clamp(35px, 10.6vw, 51px); }
+  .web-client.language-en .join-page .join-description,
+  .web-client.language-de .join-page .join-description { font-size: 13.2px; }
+  .web-client.language-en .join-page .join-card h2,
+  .web-client.language-de .join-page .join-card h2 { font-size: 22px; }
+  .web-client.language-en .join-page .card-lead,
+  .web-client.language-de .join-page .card-lead { font-size: 13px; }
+}
+
+@media (max-width: 420px) {
+  .web-client.language-en .join-page .brand-lockup strong,
+  .web-client.language-de .join-page .brand-lockup strong { font-size: 13.2px; }
+}
 
 @media (max-width: 740px) {
   .performance-trigger { width: 36px; height: 36px; min-height: 36px; justify-content: center; padding: 0; }
